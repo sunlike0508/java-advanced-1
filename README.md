@@ -16,23 +16,23 @@
 
 **그림1 - 프로그램A의 코드1 실행 시작**
 
-![image](https://github.com/user-attachments/assets/63854f66-8c22-4185-8c3a-9a7b23c6b8da)
+<img width="562" alt="image" src="https://github.com/user-attachments/assets/363a2759-a5e6-4c7c-a05b-48cda8e1276c">
 
 **그림2 - 프로그램A의 코드2 실행 중**
 
-![image](https://github.com/user-attachments/assets/0f2d4a39-d75a-46ae-a2c1-7330b7b74489)
+<img width="596" alt="image" src="https://github.com/user-attachments/assets/732d75d2-1ea9-4ee7-8494-6b263888bcd5">
 
 **그림3 - 프로그램A의 실행 완료**
 
-![image](https://github.com/user-attachments/assets/bd40e4d9-4c66-4c5f-8a83-44bc1705814e)
+<img width="617" alt="image" src="https://github.com/user-attachments/assets/2bfc1313-7dd2-40f4-933a-2b877151a189">
 
 **그림4 - 프로그램B 실행 시작**
 
-![image](https://github.com/user-attachments/assets/d97b0947-08c1-47b9-ab54-d7ce14d20576)
+<img width="601" alt="image" src="https://github.com/user-attachments/assets/eb76961a-24ec-4e59-ab20-61e166cb0b7a">
 
 **그림5 - 프로그램A 완료후 프로그램 B완료**
 
-![image](https://github.com/user-attachments/assets/825edec6-7e8d-45a3-bd54-dc9545bbef81)
+<img width="596" alt="image" src="https://github.com/user-attachments/assets/9e12408e-05ec-4a0a-bd93-740ed927f2b7">
 
 프로그램의 실행이란 프로그램을 구성하는 코드를 순서대로 CPU에서 연산(실행)하는 일이다.
 
