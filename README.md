@@ -16,7 +16,7 @@
 
 **그림1 - 프로그램A의 코드1 실행 시작**
 
-![image](https://github.com/user-attachments/assets/2a5504c0-d29d-4205-94e5-30abbd133ad0)
+![image](https://github.com/user-attachments/assets/63854f66-8c22-4185-8c3a-9a7b23c6b8da)
 
 **그림2 - 프로그램A의 코드2 실행 중**
 
