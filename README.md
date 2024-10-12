@@ -46,7 +46,7 @@
 
 이를 해결하기 위해 하나의 CPU 코어로 여러 프로그램을 동시에 실행하는 '멀티태스킹' 기술이 등장했다.
 
-**멀티태스킹**
+### 멀티태스킹
 
 순서대로 촬영한 연속된 사진을 빠르게 교차해서 보여줄 경우 사람은 이를 움직이는 영상으로 인지한다. 
 
@@ -62,15 +62,15 @@
 
 **그림1**
 
-![image](https://github.com/user-attachments/assets/f41ac20e-a81c-4040-9f04-c224855710c0)
+<img width="600" alt="image" src="https://github.com/user-attachments/assets/4b61da09-11bc-41c3-b467-acc1867f5ba1">
 
 **그림1 - 프로그램B의 코드1 수행**
 
-![image](https://github.com/user-attachments/assets/4b255fd8-c4a3-445c-8740-9250c67e3283)
+<img width="598" alt="image" src="https://github.com/user-attachments/assets/855980f2-8a7c-479e-a941-382bfee3016b">
 
 **그림3 - 프로그램 수행 완료**
 
-![image](https://github.com/user-attachments/assets/e1240ea1-3b0b-48bf-9bd7-c3134e87ec75)
+<img width="583" alt="image" src="https://github.com/user-attachments/assets/c7b5a611-f573-45e6-b34a-8d527c9c668d">
 
 이 방식은 CPU 코어가 프로그램A의 코드를 0.01초 정도 수행하다가 잠시 멈추고, 프로그램B의 코드를 0.01초 정도 수행한다. 
 
@@ -102,7 +102,8 @@ CPU 안에는 실제 연산을 처리할 수 있는 코어라는 것이 있다.
 
 **그림1 - 프로그램A, 프로그램B 실행**
 
-![image](https://github.com/user-attachments/assets/ab5110b6-3a03-42b0-9dd5-cc8c9ca42443)
+<img width="566" alt="image" src="https://github.com/user-attachments/assets/e1c4cba7-a150-4759-b0af-be8fbac4b8b5">
+
 
 CPU 코어가 2개이므로 물리적으로 동시에 2개의 프로그램을 처리할 수 있다.
 
@@ -110,13 +111,13 @@ CPU 코어가 2개이므로 물리적으로 동시에 2개의 프로그램을 �
 
 **그림2 - 프로그램C, 프로그램A 실행**
 
-![image](https://github.com/user-attachments/assets/5062a4e7-e849-405a-a066-ee5a44f3d7fc)
+<img width="586" alt="image" src="https://github.com/user-attachments/assets/2ccf6342-5b15-4601-a240-5a53a6c39677">
 
 CPU 코어들이 프로그램A와 프로그램B를 실행하다가 잠시 멈추고, 프로그램C와 프로그램A를 수행한다. 이런식으로 코어가 2개여도 2개보다 더 많은 프로그램을 실행할 수 있다.
 
 **그림3 - 실행 완료**
 
-![image](https://github.com/user-attachments/assets/3cfc53c3-721c-44ae-a754-89ce010eedc5)
+<img width="591" alt="image" src="https://github.com/user-attachments/assets/92f13435-15bd-4c69-b033-ec072ad09a85">
 
 **멀티프로세싱 vs. 멀티태스킹**
 
@@ -141,7 +142,7 @@ CPU 코어들이 프로그램A와 프로그램B를 실행하다가 잠시 멈추
 
 ## 프로세스와 스레드
 
-![image](https://github.com/user-attachments/assets/2922b4dc-452c-49de-ad57-2de64d8f64aa)
+<img width="586" alt="image" src="https://github.com/user-attachments/assets/0cc4215a-f1cb-4206-baaa-2f97bf0abc73">
 
 ### 프로세스
 
@@ -267,15 +268,15 @@ CPU 코어는 1개이고, 프로세스는 2개이다. 프로세스 A는 스레�
 
 프로세스는 실행 환경과 자원을 제공하는 컨테이너 역할을 하고, 실제 CPU를 사용해서 코드를 하나하나 실행하는 것은 스레드이다.
 
-![image](https://github.com/user-attachments/assets/ffb12bd4-3129-4dd7-9111-bc36efd1caac)
+<img width="593" alt="image" src="https://github.com/user-attachments/assets/e34964ea-aae3-48c7-b5f6-201ce36e50e9">
 
 프로세스A에 있는 스레드A1을 실행한다.
 
-![image](https://github.com/user-attachments/assets/2d4a3838-f141-4d0a-bff0-ed201b243b10)
+<img width="598" alt="image" src="https://github.com/user-attachments/assets/7822bfd9-943f-4206-8b77-b8aed3180e37">
 
 프로세스A에 있는 스레드A1의 실행을 잠시 멈추고 프로세스B에 있는 스레드 B1을 실행한다.
 
-![image](https://github.com/user-attachments/assets/37555ebf-9f83-4c14-9a68-97c46d541de3)
+<img width="604" alt="image" src="https://github.com/user-attachments/assets/9c443847-2233-42d2-b5a8-b45e8d1b3b6b">
 
 프로세스B에 있는 스레드 B1의 실행을 잠시 멈추고 같은 프로세스의 스레드 B2를 실행한다.
 
@@ -288,6 +289,33 @@ CPU 코어는 1개이고, 프로세스는 2개이다. 프로세스 A는 스레�
 운영체체가 스레드를 어떻게 스케줄링 하는지, 스케줄링 관점으로 알아보자.
 
 운영체제는 내부에 스케줄링 큐를 가지고 있고, 각각의 스레드는 스케줄링 큐에서 대기한다.
+
+<img width="584" alt="image" src="https://github.com/user-attachments/assets/4bd4fbff-8a03-482d-a4ba-bb2b56044f3e">
+
+스레드A1, 스레드B1, 스레드B2가 스케줄링 큐에 대기한다.
+
+<img width="589" alt="image" src="https://github.com/user-attachments/assets/e22148b6-7535-433b-a971-ea3600d53005">
+
+운영체제는 스레드A1을 큐에서 꺼내고 CPU를 통해 실행한다.
+이때 스레드A1이 프로그램의 코드를 수행하고, CPU를 통한 연산도 일어난다.
+
+<img width="575" alt="image" src="https://github.com/user-attachments/assets/5d871a70-0573-467f-bd27-3a831caaea57">
+
+운영체제는 스레드A1을 잠시 멈추고, 스케줄링 큐에 다시 넣는다.
+
+<img width="587" alt="image" src="https://github.com/user-attachments/assets/a77be9ff-4379-4ee5-89ca-2af0c459cbb0">
+
+운영체제는 스레드B1을 큐에서 꺼내고 CPU를 통해 실행한다.
+
+이런 과정을 반복해서 수행한다.
+
+
+
+
+
+
+
+
 
 
 
