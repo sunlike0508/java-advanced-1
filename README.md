@@ -527,6 +527,8 @@ CPU의 연산 능력을 많이 요구하는 작업을 의미한다.
 
 **자바 메모리 구조**
 
+<img width="708" alt="Screenshot 2024-10-23 at 22 45 38" src="https://github.com/user-attachments/assets/5c56c55c-29c7-44f8-9dd2-15d6dbfdfeaa">
+
 * **메서드 영역(Method Area)**: 메서드 영역은 프로그램을 실행하는데 필요한 공통 데이터를 관리한다. 이 영역은 프로그램의 모든 영역에서 공유한다.
   * 클래스 정보: 클래스의 실행 코드(바이트 코드), 필드, 메서드와 생성자 코드등 모든 실행 코드가 존재한다. 
   * static 영역: `static` 변수들을 보관한다.
@@ -576,7 +578,7 @@ public static void main(String[] args) {
 
 `run()` 메서드가 아니라 반드시 `start()` 메서드를 호출해야 한다. 그래야 별도의 스레드에서 `run()` 코드가 실행된다.
 
-
+<img width="703" alt="Screenshot 2024-10-23 at 23 18 45" src="https://github.com/user-attachments/assets/d7963c0d-d46a-4c0a-b33c-7951c9be3355">
 
 실행 결과를 보면 `main()` 메서드는 `main` 이라는 이름의 스레드가 실행하는 것을 확인할 수 있다. 
 
@@ -584,10 +586,7 @@ public static void main(String[] args) {
 
 자바는 실행 시점에 `main` 이라는 이름의 스 레드를 만들고 프로그램의 시작점인 `main()` 메서드를 실행한다.
 
-
-
-
-
+<img width="691" alt="Screenshot 2024-10-23 at 23 19 05" src="https://github.com/user-attachments/assets/b9c97047-a0ef-4d7a-8c1f-eb561882e332">
 
 `HelloThread` 스레드 객체를 생성한 다음에 `start()` 메서드를 호출하면 자바는 스레드를 위한 별도의 스택 공간을 할당한다.
 
@@ -599,7 +598,6 @@ public static void main(String[] args) {
 
 `Thread-0` 스레드는 `run()` 메서드의 스택 프레임을 스택에 올리면서 `run()` 메서드를 시작한다.
 
-
 **메서드를 실행하면 스택 위에 스택 프레임이 쌓인다**
 
 `main` 스레드는 `main()` 메서드의 스택 프레임을 스택에 올리면서 시작한다.
@@ -608,9 +606,7 @@ public static void main(String[] args) {
 
 실행 결과를 보면 `Thread-0` 스레드가 `run()` 메서드를 실행한 것을 확인할 수 있다.
 
-
-
-
+<img width="697" alt="Screenshot 2024-10-23 at 23 19 41" src="https://github.com/user-attachments/assets/b69a8d67-92d8-40fe-a516-e863df364e6e">
 
 `main` 스레드가 `HelloThread` 인스턴스를 생성한다. 이때 스레드에 이름을 부여하지 않으면 자바가 `Thread-0` , `Thread-1` 과 같은 임의의 이름을 부여한다.
 
