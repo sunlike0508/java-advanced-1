@@ -923,6 +923,228 @@ Thread-2: run()
 
 <img width="710" alt="Screenshot 2024-10-24 at 22 57 24" src="https://github.com/user-attachments/assets/47ceb4da-7589-44d6-b910-252df9440c77">
 
+## Runnable을 만드는 다양한 방법
+
+### 정적 중첩 클래스 사용
+
+```java
+public class InnerRunnableMainV1 {
+
+    public static void main(String[] args) {
+
+        log("main() start");
+
+        MyRunnable runnable = new MyRunnable();
+        new Thread(runnable).start();
+
+        log("main() end");
+    }
+
+    static class MyRunnable implements Runnable {
+
+        @Override
+        public void run() {
+            log("run() start");
+        }
+    }
+}
+```
+
+### 익명 클래스 사용
+
+```java
+public class InnerRunnableMainV2 {
+
+    public static void main(String[] args) {
+
+        log("main() start");
+
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                log("run() start");
+            }
+        };
+
+        new Thread(runnable).start();
+
+        log("main() end");
+    }
+}
+```
+
+```java
+public class InnerRunnableMainV3 {
+
+    public static void main(String[] args) {
+
+        log("main() start");
+
+        Thread thread = new Thread() {
+            @Override
+            public void run() {
+                log("run() start");
+            }
+        };
+
+        thread.start();
+
+        log("main() end");
+    }
+}
+
+```
+
+```java
+public class InnerRunnableMainV4 {
+
+    public static void main(String[] args) {
+
+        log("main() start");
+
+        Thread thread = new Thread(() -> log("run() start"));
+
+        thread.start();
+
+        log("main() end");
+    }
+}
+```
+
+## 문제와 풀이
+
+### 문제1: Thread 상속
+
+다음 요구사항에 맞게 멀티스레드 프로그램을 작성해라.
+
+1. `Thread` 클래스를 상속받은 `CounterThread` 라는 스레드 클래스를 만들자.
+2. 이 스레드는 1부터 5까지의 숫자를 1초 간격으로 출력해야 한다. 
+3. 앞서 우리가 만든 `log()` 기능을 사용해서 출력해라.
+4. `main()` 메서드에서 `CounterThread` 스레드 클래스를 만들고 실행해라.
+
+실행 결과를 참고하자.
+
+**실행 결과**
+
+```
+09:46:23.329 [ Thread-0] value: 1
+09:46:24.332 [ Thread-0] value: 2
+09:46:25.338 [ Thread-0] value: 3
+09:46:26.343 [ Thread-0] value: 4
+09:46:27.349 [ Thread-0] value: 5
+```
+
+```java
+public class CounterThreadMain {
+    public static void main(String[] args) {
+        Thread thread = new CounterThread();
+        thread.start();
+    }
+  
+    static class CounterThread extends Thread {
+  
+        @Override
+        public void run() {
+            for(int i = 1; i <= 5; i++) {
+                try {
+                    log("value: " + i);
+                    Thread.sleep(1000);
+                } catch(InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+    }
+}
+
+public static void main(String[] args) {
+    new Thread(() -> {
+        for(int i = 1; i <= 5; i++) {
+            try {
+                log("value: " + i);
+                Thread.sleep(1000);
+            } catch(InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }).start();
+}
+```
+
+### 문제 2 : runnable 로 구현
+
+```java
+public class CounterRunnableMain {
+
+    public static void main(String[] args) {
+        Runnable r = new CounterRunnable();
+
+        Thread thread = new Thread(r, "counter");
+        thread.start();
+    }
+
+    static class CounterRunnable implements Runnable {
+
+        @Override
+        public void run() {
+            for(int i = 1; i <= 5; i++) {
+                try {
+                    log("value: " + i);
+                    Thread.sleep(1000);
+                } catch(InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+    }
+}
+```
+
+### 문제 3: 여러 스레드 사용
+
+1. `Thread-A` , `Thread-B` 두 스레드를 만들어라
+2. `Thread-A` 는 1초에 한 번씩 "A"를 출력한다.
+3. `Thread-B` 는 0.5초에 한 번씩 "B"를 출력한다. 이 프로그램은 강제 종료할 때 까지 계속 실행된다.
+
+```java
+/**
+ * 나는 그냥 카운터로 해봤음
+ */
+public class MultiThreadMain {
+
+  public static void main(String[] args) {
+
+    new Thread(() -> run(1000), "ThreadA").start();
+
+    new Thread(() -> run(500), "ThreadB").start();
+  }
+
+  static void run(int time) {
+    int count = 0;
+
+    while(true) {
+      try {
+        log("value : " + count++);
+        Thread.sleep(time);
+      } catch(InterruptedException e) {
+        throw new RuntimeException(e);
+      }
+
+    }
+  }
+}
+```
+
+
+
+
+
+
+
+
+
+
+
 
 
 
