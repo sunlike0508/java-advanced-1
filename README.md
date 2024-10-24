@@ -688,14 +688,238 @@ main메인 끝
 
 따라서 `main` 스레드가 아닌 별도의 스레드에서 재정의한 `run()` 메서 드를 실행하려면, 반드시 `start()` 메서드를 호출해야 한다.
 
+## 데몬 스레드
+
+### 데몬 스레드
+
+스레드는 사용자(user) 스레드와 데몬(daemon) 스레드 2가지 종류로 구분할 수 있다.
+
+**사용자 스레드(non-daemon 스레드)** 
+
+프로그램의 주요 작업을 수행한다.
+
+작업이 완료될 때까지 실행된다.
+
+모든 user 스레드가 종료되면 JVM도 종료된다.
+
+### 데몬 스레드
+
+백그라운드에서 보조적인 작업을 수행한다.
+
+모든 user 스레드가 종료되면 데몬 스레드는 자동으로 종료된다.
+
+JVM은 데몬 스레드의 실행 완료를 기다리지 않고 종료된다. 
+
+데몬 스레드가 아닌 모든 스레드가 종료되면, 자바 프로그램도 종료된다.
+
+**용어 - 데몬** 
+
+그리스 신화에서 데몬은 신과 인간 사이의 중간적 존재로, 보이지 않게 활동하며 일상적인 일들을 도왔다. 
+
+이런 의미로 컴퓨터 과학에서는 사용자에게 직접적으로 보이지 않으면서 시스템의 백그라운드에서 작업을 수행하는 것을 데몬 스레드, 데몬 프로세스라 한다. 
+
+예를 들어서 사용하지 않는 파일이나 메모리를 정리하는 작업 들이 있다.
+
+```java
+public class DaemonThreadMain {
+
+    public static void main(String[] args) {
+        System.out.println(Thread.currentThread().getName() + ": main() start");
+        DaemonThread dt = new DaemonThread();
+        dt.setDaemon(true);
+        dt.start();
+        System.out.println(Thread.currentThread().getName() + ": main() end");
+    }
+
+    static class DaemonThread extends Thread {
+
+        @Override
+        public void run() {
+            System.out.println(Thread.currentThread().getName() + ": run() start");
+
+            try {
+                Thread.sleep(10000);
+            } catch(InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+
+            System.out.println(Thread.currentThread().getName() + ": run() end");
+        }
+    }
+}
+```
+
+```shell
+main: main() start
+main: main() end
+Thread-0: run() start
+```
+
+`setDaemon(true)` 로 설정해보자.
+
+`Thread-0` 는 데몬 스레드로 설정된다.
+
+유일한 user 스레드인 `main` 스레드가 종료되면서 자바 프로그램도 종료된다. 
+
+따라서 `run() end` 가 출력되기 전에 프로그램이 종료된다.
+
+## 스레드 생성 - Runnable
+
+스레드를 만들 때는 `Thread` 클래스를 상속 받는 방법과 `Runnable` 인터페이스를 구현하는 방법이 있다.
+
+이번에는 `Runnable` 인터페이스를 구현하는 방식으로 스레드를 생성해보자
+
+**Runnable 인터페이스** 
+
+자바가 제공하는 스레드 실행용 인터페이스
+
+```java
+package java.lang;
+
+public interface Runnable {
+  void run();
+}
+```
+
+```java
+public class HelloRunnable implements Runnable {
+     @Override
+     public void run() {
+         System.out.println(Thread.currentThread().getName() + ": run()");
+     }
+}
+```
+
+```java
+
+public static void main(String[] args) {
+
+    System.out.println(Thread.currentThread().getName() + ": main() start");
+    HelloRunnable runnable = new HelloRunnable();
+    Thread t1 = new Thread(runnable);
+    t1.start();
+    System.out.println(Thread.currentThread().getName() + ": main() end");
+}
+```
+
+```shell
+main: main() start
+main: main() end
+Thread-0: run()
+```
+
+실행 결과는 기존과 같다. 차이가 있다면, 스레드와 해당 스레드가 실행할 작업이 서로 분리되어 있다는 점이다.
+
+스레드 객체를 생성할 때, 실행할 작업을 생성자로 전달하면 된다.
+
+### Thread 상속 vs Runnable 구현
+
+***스레드 사용할 때는 `Thread` 를 상속 받는 방법보다 `Runnable` 인터페이스를 구현하는 방식을 사용하자.***
+
+두 방식이 서로 장단점이 있지만, 스레드를 생성할 때는 `Thread` 클래스를 상속하는 방식보다 `Runnable` 인터페이스 를 구현하는 방식이 더 나은 선택이다.
+
+**Thread 클래스 상속 방식** 
+
+**장점**
+
+간단한 구현: `Thread` 클래스를 상속받아 `run()` 메서드만 재정의하면 된다.
+
+**단점**
+
+상속의 제한: 자바는 단일 상속만을 허용하므로 이미 다른 클래스를 상속받고 있는 경우 `Thread` 클래스를 상속 받을 수 없다.
+
+유연성 부족: 인터페이스를 사용하는 방법에 비해 유연성이 떨어진다.
+
+**Runnable 인터페이스를 구현 방식** 
+
+**장점**
+
+상속의 자유로움: `Runnable` 인터페이스 방식은 다른 클래스를 상속받아도 문제없이 구현할 수 있다. 
+
+코드의 분리: 스레드와 실행할 작업을 분리하여 코드의 가독성을 높일 수 있다.
+
+여러 스레드가 동일한 `Runnable` 객체를 공유할 수 있어 자원 관리를 효율적으로 할 수 있다.
+
+**단점**
+
+코드가 약간 복잡해질 수 있다. 
+
+`Runnable` 객체를 생성하고 이를 `Thread` 에 전달하는 과정이 추가된다.
+
+정리하자면 `Runnable` 인터페이스를 구현하는 방식을 사용하자. 
+
+스레드와 실행할 작업을 명확히 분리하고, 인터페이스를 사용하므로 `Thread` 클래스를 직접 상속하는 방식보다 더 유연하고 유지보수 하기 쉬운 코드를 만들 수 있다.
 
 
+## 로거 만들기
 
+현재 어떤 스레드가 코드를 실행하는지 출력하기 위해 다음과 같이 긴 코드를 작성하는 것은 너무 번거롭다. 
 
+```java
+System.out.println(Thread.currentThread().getName() + ": run()"); 
+```
 
+다음 예시와 같이 실행하면, 현재 시간, 스레드 이름, 출력 내용등이 한번에 나오는 편리한 기능을 만들어보자. 
 
+```java
+log("hello thread");
+log(123);
+```
 
+**실행 결과** 
 
+```
+ 15:39:02.000 [main] hello thread
+ 15:39:02.002 [main] 123
+```
+
+```java
+public abstract class MyLogger {
+
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
+
+    public static void log(Object object) {
+
+        String time = LocalTime.now().format(formatter);
+
+        System.out.printf("%S [%9s] %s\n", time, Thread.currentThread().getName(), object);
+    }
+}
+```
+
+## 여러 스레드 만들기
+
+```java
+public static void main(String[] args) {
+
+    log("main() start");
+
+    HelloRunnable runnable = new HelloRunnable();
+
+    Thread thread1 = new Thread(runnable);
+    thread1.start();
+    Thread thread2 = new Thread(runnable);
+    thread2.start();
+    Thread thread3 = new Thread(runnable);
+    thread3.start();
+    
+    log("main() end");
+}
+```
+
+```shell
+22:56:47.278 [     main] main() start
+22:56:47.281 [     main] main() end
+Thread-0: run()
+Thread-1: run()
+Thread-2: run()
+```
+
+실행 결과는 다를 수 있다. 스레드의 실행 순서는 보장되지 않는다.
+
+스레드3개를 생성할 때 모두 같은 `HelloRunnable` 인스턴스( `x001` )를 스레드의 실행 작업으로 전달했다. 
+
+`Thread-0` , `Thread-1` , `Thread-2` 는 모두 `HelloRunnable` 인스턴스에 있는 `run()` 메서드를 실행한다.
 
 
 
