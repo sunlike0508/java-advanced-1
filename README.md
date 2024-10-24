@@ -921,6 +921,7 @@ Thread-2: run()
 
 `Thread-0` , `Thread-1` , `Thread-2` 는 모두 `HelloRunnable` 인스턴스에 있는 `run()` 메서드를 실행한다.
 
+<img width="710" alt="Screenshot 2024-10-24 at 22 57 24" src="https://github.com/user-attachments/assets/47ceb4da-7589-44d6-b910-252df9440c77">
 
 
 
