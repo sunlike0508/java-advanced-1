@@ -668,6 +668,8 @@ mainrun 호출 끝
 main메인 끝
 ```
 
+<img width="690" alt="Screenshot 2024-10-24 at 22 29 05" src="https://github.com/user-attachments/assets/a1eb2c81-0a04-47ee-bfd6-6d25b91935f7">
+
 실행 결과를 잘 보면 별도의 스레드가 `run()` 을 실행하는 것이 아니라, `main` 스레드가 `run()` 메서드를 호출하는 것을 확인할 수 있다.
 
 자바를 처음 실행하면 `main` 스레드가 `main()` 메서드를 호출하면서 시작한다.
@@ -676,8 +678,7 @@ main메인 끝
 
 `main` 스레드가 `run()` 메서드를 실행했기 때문에 `main` 스레드가 사용하는 스택위에 `run()` 스택 프레임이 올라간다.
 
-
-
+<img width="683" alt="Screenshot 2024-10-24 at 22 31 31" src="https://github.com/user-attachments/assets/5ac3e48c-ea05-44b8-aa17-071222a38475">
 
 결과적으로 `main` 스레드에서 모든 것을 처리한 것이 된다.
 
