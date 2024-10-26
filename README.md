@@ -1135,6 +1135,8 @@ public class MultiThreadMain {
 }
 ```
 
+# 스레드 제어와 생명 주기1
+
 
 
 
