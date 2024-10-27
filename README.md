@@ -1367,8 +1367,57 @@ log("myThread.getState() = " + myThread.getState());
 3. **Blocked/Waiting/Timed Waiting → Runnable**: 스레드가 락을 얻거나, 기다림이 완료되면 다시 `Runnable` 상태로 돌아간다.
 4. **Runnable → Terminated**: 스레드의 `run()` 메서드가 완료되면 스레드는 `Terminated` 상태가 된다.
 
+```java
+public class ThreadStateMain {
 
+    public static void main(String[] args) throws InterruptedException {
 
+        Thread thread = new Thread(new MyRunnable(), "myThread");
+        log("myThread.state1 = " + thread.getState());
+        log("myThread.start()");
+        thread.start();
+        Thread.sleep(1000);
+        log("myThread.state3 = " + thread.getState());
+        Thread.sleep(4000);
+        log("myThread.state5 = " + thread.getState());
+        log("myThread.end()");
+    }
+
+    static class MyRunnable implements Runnable {
+
+        @Override
+        public void run() {
+            try {
+
+                log("start");
+                log("myThread.state2 = " + Thread.currentThread().getState());
+                log("sleep() start");
+                Thread.sleep(3000);
+                //log("myThread.state3 = " + Thread.currentThread().getState());
+                log("sleep() end");
+                log("myThread.state4 = " + Thread.currentThread().getState());
+                log("end");
+            } catch(InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+}
+```
+
+```shell
+15:47:21.534 [     main] myThread.state1 = NEW
+15:47:21.536 [     main] myThread.start()
+15:47:21.537 [ myThread] start
+15:47:21.537 [ myThread] myThread.state2 = RUNNABLE
+15:47:21.537 [ myThread] sleep() start
+15:47:22.542 [     main] myThread.state3 = TIMED_WAITING
+15:47:24.542 [ myThread] sleep() end
+15:47:24.544 [ myThread] myThread.state4 = RUNNABLE
+15:47:24.544 [ myThread] end
+15:47:26.545 [     main] myThread.state5 = TERMINATED
+15:47:26.546 [     main] myThread.end()
+```
 
 
 
