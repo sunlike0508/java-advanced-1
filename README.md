@@ -1611,6 +1611,7 @@ public class JoinMainV1 {
 16:57:23.351 [ thread-1] 작업완료 result : 1275
 ```
 
+<img width="686" alt="Screenshot 2024-10-27 at 16 58 36" src="https://github.com/user-attachments/assets/92068138-151d-4eac-965c-37e615db428a">
 
 
 `main` 스레드는 `thread-1` , `thread2` 에 작업을 지시하고, `thread-1` , `thread2` 가 계산을 완료하기도 전에 먼저 계산 결과를 조회했다. 
@@ -1618,12 +1619,14 @@ public class JoinMainV1 {
 참고로 `thread-1` , `thread-2` 가 계산을 완료하는데는 2초 정도의 시간이 걸린다. 따라서 결과가 `task1 + task2 = 0` 으로 출력된다.
 
 
+<img width="679" alt="Screenshot 2024-10-27 at 16 58 41" src="https://github.com/user-attachments/assets/4bfbf008-4aef-4f24-a720-3bd103d07fd9">
 
 
 프로그램이 처음 시작되면 `main` 스레드는 `thread-1` , `thread-2` 를 생성하고 `start()` 로 실행한다. `thread-1` , `thread-2` 는 각각 자신에게 전달된 `SumTask` 인스턴스의 `run()` 메서드를 스택에 올리고 실행
 한다.
 `thread-1` 은 `x001` 인스턴스의 `run()` 메서드를 실행한다. `thread-2` 는 `x002` 인스턴스의 `run()` 메서드를 실행한다.
 
+<img width="686" alt="Screenshot 2024-10-27 at 16 59 07" src="https://github.com/user-attachments/assets/8eb18f27-6177-44fb-8420-4c041d93bfb2">
 
 
 `main` 스레드는 두 스레드를 시작한 다음에 바로 `task1.result` , `task2.result` 를 통해 인스턴스에 있는 결과 값을 조회한다. 참고로 `main` 스레드가 실행한 `start()` 메서드는 스레드의 실행이 끝날 때 까지 기다리 지 않는다! 다른 스레드를 실행만 해두고, 자신의 다음 코드를 실행할 뿐이다!
@@ -1631,6 +1634,7 @@ public class JoinMainV1 {
 
 
 
+<img width="690" alt="Screenshot 2024-10-27 at 16 59 18" src="https://github.com/user-attachments/assets/0a45b3d6-f3a8-4dab-9203-7319b4b16f48">
 
 
 
