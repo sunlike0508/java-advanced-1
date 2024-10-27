@@ -1423,6 +1423,237 @@ public class ThreadStateMain {
 
 <img width="684" alt="Screenshot 2024-10-27 at 15 48 52" src="https://github.com/user-attachments/assets/08788dc2-3917-44fd-9f8d-4fc7ca16a7e6">
 
+## 체크 예외 재정의
+
+`Runnable` 인터페이스의 `run()` 메서드를 구현할 때 `InterruptedException` 체크 예외를 밖으로 던질 수 없는 이유를 알아보자.
+
+`Runnable` 인터페이스는 다음과 같이 정의되어 있다. 
+
+```java
+public interface Runnable {
+    void run();
+}
+```
+
+자바에서 메서드를 재정의 할 때, 재정의 메서드가 지켜야할 예외와 관련된 규칙이 있다. 
+
+**체크 예외**
+
+부모 메서드가 체크 예외를 던지지 않는 경우, 재정의된 자식 메서드도 체크 예외를 던질 수 없다.
+
+자식 메서드는 부모 메서드가 던질 수 있는 체크 예외의 하위 타입만 던질 수 있다.
+
+**언체크(런타임) 예외**
+
+예외 처리를 강제하지 않으므로 상관없이 던질 수 있다.
+
+`Runnable` 인터페이스의 `run()` 메서드는 아무런 체크 예외를 던지지 않는다. 
+
+따라서 `Runnable` 인터페이스의 `run()` 메서드를 재정의 하는 곳에서는 체크 예외를 밖으로 던질 수 없다. 
+
+다음 코드를 실행하면 컴파일 오류가 발생한다.
+
+```java
+public class CheckedException {
+
+    public static void main(String[] args) throws Exception {
+        throw new Exception();
+    }
+
+    static class CheckedRunnable implements Runnable {
+
+
+        @Override
+        public void run() throw Exception{ // 오류 발생
+            throw new Exception(); // 오류 발생
+        }
+    }
+}
+```
+
+자바는 왜 이런 제약을 두는 것일까?
+
+부모 클래스의 메서드를 호출하는 클라이언트 코드는 부모 메서드가 던지는 특정 예외만을 처리하도록 작성된다. 
+
+자식 클래스가 더 넓은 범위의 예외를 던지면 해당 코드는 모든 예외를 제대로 처리하지 못할 수 있다. 
+
+이는 예외 처리의 일관성을 해치고, 예상하지 못한 런타임 오류를 초래할 수 있다.
+
+**체크 예외 재정의 규칙**
+
+자식 클래스에 재정의된 메서드는 부모 메서드가 던질 수 있는 체크 예외의 하위 타입만을 던질 수 있다. 
+
+원래 메서드가 체크 예외를 던지지 않는 경우, 재정의된 메서드도 체크 예외를 던질 수 없다.
+
+**안전한 예외 처리**
+
+체크 예외를 `run()` 메서드에서 던질 수 없도록 강제함으로써, 개발자는 반드시 체크 예외를 try-catch 블록 내에서 처리하게 된다. 
+
+이는 예외 발생 시 예외가 적절히 처리되지 않아서 프로그램이 비정상 종료되는 상황을 방지할 수 있다. 
+
+특히 멀티스레딩 환경에서는 예외 처리를 강제함으로써 스레드의 안정성과 일관성을 유지할 수 있다.
+
+하지만 이전에 자바 예외 처리 강의에서 설명했듯이, 체크 예외를 강제하는 이런 부분들은 자바 초창기 기조이고, 최근에는 체크 예외보다는 언체크(런타임) 예외를 선호한다.
+
+
+## join
+
+**Waiting (대기 상태)**
+
+스레드가 다른 스레드의 특정 작업이 완료되기를 무기한 기다리는 상태이다.
+
+```java
+public class JoinMainV0 {
+
+    public static void main(String[] args) {
+        log("start");
+        Thread thread1 = new Thread(new Job(), "thread-1");
+        Thread thread2 = new Thread(new Job(), "thread-2");
+        thread1.start();
+        thread2.start();
+        log("end");
+    }
+
+    static class Job implements Runnable {
+        @Override
+        public void run() {
+            log("작업시작");
+            ThreadUtils.sleep(2000);
+            log("작업완료");
+        }
+    }
+}
+```
+
+```shell
+16:16:21.412 [     main] start
+16:16:21.415 [     main] end
+16:16:21.415 [ thread-1] 작업시작
+16:16:21.415 [ thread-2] 작업시작
+16:16:23.417 [ thread-2] 작업완료
+16:16:23.421 [ thread-1] 작업완료
+```
+
+실행 결과를 보면 `main` 스레드가 먼저 종료되고, 그 다음에 `thread-1` , `thread-2` 가 종료된다.
+
+`main` 스레드는 `thread-1` , `thread-2` 를 실행하고 바로 자신의 다음 코드를 실행한다. 
+
+여기서 핵심은 `main` 스레 드가 `thread-1` , `thread-2` 가 끝날때까지 기다리지 않는다는 점이다. 
+
+`main` 스레드는 단지 `start()` 를 호출해서 다른 스레드를 실행만 하고 바로 자신의 다음 코드를 실행한다.
+
+그런데 만약 `thread-1` , `thread-2` 가 종료된 다음에 `main` 스레드를 가장 마지막에 종료하려면 어떻게 해야할까? 
+
+예를 들어서 `main` 스레드가 `thread-1` , `thread-2` 에 각각 어떤 작업을 지시하고, 그 결과를 받아서 처리하고 싶다면 어떻게 해야할까?
+
+
+## join이 필요한 상황
+
+```java
+public class JoinMainV1 {
+
+    public static void main(String[] args) {
+        log("start");
+        SumTask task1 = new SumTask(1, 50);
+        SumTask task2 = new SumTask(51, 100);
+
+        Thread t1 = new Thread(task1, "thread-1");
+        Thread t2 = new Thread(task2, "thread-2");
+
+        t1.start();
+        t2.start();
+
+        log("task1.result = " + task1.result);
+        log("task2.result = " + task2.result);
+
+        int sumAll = task1.result + task2.result;
+
+        log("sumAll = " + sumAll);
+        log("end");
+
+    }
+
+    static class SumTask implements Runnable {
+
+        int startValue;
+        int endValue;
+        int result;
+
+        public SumTask(int startValue, int endValue) {
+            this.startValue = startValue;
+            this.endValue = endValue;
+        }
+        
+        @Override
+        public void run() {
+            log("작업시작");
+            sleep(2000);
+            int sum = 0;
+            for(int i = startValue; i <= endValue; i++) {
+                sum += i;
+            }
+            result = sum;
+            log("작업완료 result : " + result);
+        }
+    }
+}
+```
+
+```shell
+16:57:21.344 [     main] start
+16:57:21.345 [ thread-1] 작업시작
+16:57:21.345 [ thread-2] 작업시작
+16:57:21.349 [     main] task1.result = 0
+16:57:21.349 [     main] task2.result = 0
+16:57:21.349 [     main] sumAll = 0
+16:57:21.349 [     main] end
+16:57:23.348 [ thread-2] 작업완료 result : 3775
+16:57:23.351 [ thread-1] 작업완료 result : 1275
+```
+
+
+
+`main` 스레드는 `thread-1` , `thread2` 에 작업을 지시하고, `thread-1` , `thread2` 가 계산을 완료하기도 전에 먼저 계산 결과를 조회했다. 
+
+참고로 `thread-1` , `thread-2` 가 계산을 완료하는데는 2초 정도의 시간이 걸린다. 따라서 결과가 `task1 + task2 = 0` 으로 출력된다.
+
+
+
+
+프로그램이 처음 시작되면 `main` 스레드는 `thread-1` , `thread-2` 를 생성하고 `start()` 로 실행한다. `thread-1` , `thread-2` 는 각각 자신에게 전달된 `SumTask` 인스턴스의 `run()` 메서드를 스택에 올리고 실행
+한다.
+`thread-1` 은 `x001` 인스턴스의 `run()` 메서드를 실행한다. `thread-2` 는 `x002` 인스턴스의 `run()` 메서드를 실행한다.
+
+
+
+`main` 스레드는 두 스레드를 시작한 다음에 바로 `task1.result` , `task2.result` 를 통해 인스턴스에 있는 결과 값을 조회한다. 참고로 `main` 스레드가 실행한 `start()` 메서드는 스레드의 실행이 끝날 때 까지 기다리 지 않는다! 다른 스레드를 실행만 해두고, 자신의 다음 코드를 실행할 뿐이다!
+`thread-1` , `thread-2` 가 계산을 완료해서, `result` 에 연산 결과를 담을 때 까지는 약 2초 정도의 시간이 걸 린다. `main` 스레드는 계산이 끝나기 전에 `result` 의 결과를 조회한 것이다. 따라서 `0` 값이 출력된다.
+
+
+
+
+
+
+2초가 지난 이후에 `thread-1` , `thread-2` 는 계산을 완료한다.
+이때 `main` 스레드는 이미 자신의 코드를 모두 실행하고 종료된 상태이다.
+`task1` 인스턴스의 `result` 에는 `1275` 가 담겨있고, `task2` 인스턴스의 `result` 에는 `3775` 가 담겨있다. 여기서 문제의 핵심은 `main` 스레드가 `thread-1` , `thread-2` 의 계산이 끝날 때 까지 기다려야 한다는 점이다. 그럼
+어떻게 해야 `main` 스레드가 기다릴 수 있을까?
+
+
+### 참고 - this의 비밀
+
+어떤 메서드를 호출하는 것은, 정확히는 특정 스레드가 어떤 메서드를 호출하는 것이다.
+스레드는 메서드의 호출을 관리하기 위해 메서드 단위로 스택 프레임을 만들고 해당 스택 프레임을 스택위에 쌓아 올린 다.
+이때 인스턴스의 메서드를 호출하면, 어떤 인스턴스의 메서드를 호출했는지 기억하기 위해, 해당 인스턴스의 참조값을
+스택 프레임 내부에 저장해둔다. 이것이 바로 우리가 자주 사용하던 `this` 이다.
+특정 메서드 안에서 `this` 를 호출하면 바로 스택프레임 안에 있는 `this` 값을 불러서 사용하게 된다.
+그림을 보면 스택 프레임 안에 있는 `this` 를 확인할 수 있다. 이렇게 `this` 가 있기 때문에 `thread-1` , `thread-2` 는 자신의 인스턴스를 구분해서 사용할 수 있다. 예를 들어서 필드에 접근할 때 `this` 를 생략하면 자동으로 `this` 를 참고해서 필드에 접근한다.
+정리하면 `this` 는 호출된 인스턴스 메서드가 소속된 객체를 가리키는 참조이며, 이것이 스택 프레임 내부에 저장되어 있다.
+
+
+
+
+
 
 
 
