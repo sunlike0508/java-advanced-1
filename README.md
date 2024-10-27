@@ -1419,6 +1419,9 @@ public class ThreadStateMain {
 15:47:26.546 [     main] myThread.end()
 ```
 
+<img width="699" alt="Screenshot 2024-10-27 at 15 48 41" src="https://github.com/user-attachments/assets/26961c86-85e7-4a16-801b-a4f0f2f8fb38">
+
+<img width="684" alt="Screenshot 2024-10-27 at 15 48 52" src="https://github.com/user-attachments/assets/08788dc2-3917-44fd-9f8d-4fc7ca16a7e6">
 
 
 
