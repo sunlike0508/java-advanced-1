@@ -8,27 +8,14 @@ public class JoinMainV4 {
     public static void main(String[] args) throws InterruptedException {
         log("start");
         SumTask task1 = new SumTask(1, 50);
-        SumTask task2 = new SumTask(51, 100);
 
         Thread t1 = new Thread(task1, "thread-1");
-        Thread t2 = new Thread(task2, "thread-2");
-
         t1.start();
-        t2.start();
 
-        t1.join();
-        t2.join();
-
-        log("join() - main 쓰레드가 thread 1,2 종료까지 대기");
-
+        log("join(1000) - main 쓰레드가 thread 1종료까지 대기");
+        t1.join(1000);
         log("task1.result = " + task1.result);
-        log("task2.result = " + task2.result);
-
-        int sumAll = task1.result + task2.result;
-
-        log("sumAll = " + sumAll);
         log("end");
-
     }
 
     static class SumTask implements Runnable {

@@ -1791,10 +1791,48 @@ public static void main(String[] args) throws InterruptedException {
 
 `join(ms)` : 호출 스레드는 특정 시간 만큼만 대기한다. 호출 스레드는 지정한 시간이 지나면 다시 `RUNNABLE` 상태가 되면서 다음 코드를 수행한다.
 
+```java
+public static void main(String[] args) throws InterruptedException {
+    log("start");
+    SumTask task1 = new SumTask(1, 50);
 
+    Thread t1 = new Thread(task1, "thread-1");
+    t1.start();
 
+    log("join(1000) - main 쓰레드가 thread 1종료까지 대기");
+    t1.join(1000);
+    log("task1.result = " + task1.result);
+    log("end");
+}
+```
+
+```shell
+17:29:05.033 [     main] start
+17:29:05.035 [     main] join(1000) - main 쓰레드가 thread 1종료까지 대기
+17:29:05.035 [ thread-1] 작업시작
+17:29:06.044 [     main] task1.result = 0
+17:29:06.045 [     main] end
+17:29:07.042 [ thread-1] 작업완료 result : 1275
+```
 
 <img width="701" alt="Screenshot 2024-10-27 at 17 22 52" src="https://github.com/user-attachments/assets/5fc07dd1-4bbf-44ff-a1af-bc6cd27979ab">
+
+* `main` 스레드는 `join(1000)` 을 사용해서 `thread-1` 을 1초간 기다린다. 
+  * 이때 `main` 스레드의 상태는 `WAITING` 이 아니라 `TIMED_WAITING` 이 된다. 
+  * 보통 무기한 대기하면 `WAITING` 상태가 되고, 특정 시간 만큼만 대기하는 경우 `TIMED_WAITING` 상태가 된다.
+* `thread-1` 의 작업에는 2초가 걸린다.
+* 1초가 지나도 `thread-1` 의 작업이 완료되지 않으므로, `main` 스레드는 대기를 중단한다. 그리고 `main` 스레 드는 다시 `RUNNABLE` 상태로 바뀌면서 다음 코드를 수행한다. 
+  * 이때 `thread-1` 의 작업이 아직 완료되지 않았기 때문에 `task1.result = 0` 이 출력된다.
+* `main` 스레드가 종료된 이후에 `thread-1` 이 계산을 끝낸다. 따라서 `작업 완료 result = 1275` 이 출력된다.
+
+**정리**
+
+다른 스레드가 끝날 때 까지 무한정 기다려야 한다면 `join()` 을 사용하고, 다른 스레드의 작업을 무한정 기다릴 수 없다면 `join(ms)` 를 사용하면 된다. 
+
+물론 기다리다 중간에 나오는 상황인데, 결과가 없다면 추가적인 오류 처리가 필요 할 수 있다.
+
+
+
 
 
 
