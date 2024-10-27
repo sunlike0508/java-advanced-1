@@ -1719,10 +1719,72 @@ while(thread.getState() != TERMINATED) { //스레드의 상태가 종료될 때 
 
 ## join - join 사용
 
+```java
+public static void main(String[] args) throws InterruptedException {
+    log("start");
+    SumTask task1 = new SumTask(1, 50);
+    SumTask task2 = new SumTask(51, 100);
+  
+    Thread t1 = new Thread(task1, "thread-1");
+    Thread t2 = new Thread(task2, "thread-2");
+  
+    t1.start();
+    t2.start();
+  
+    t1.join();
+    t2.join();
+  
+    log("join() - main 쓰레드가 thread 1,2 종료까지 대기");
+  
+    log("task1.result = " + task1.result);
+    log("task2.result = " + task2.result);
+  
+    int sumAll = task1.result + task2.result;
+  
+    log("sumAll = " + sumAll);
+    log("end");
+}
+```
 
+`main` 스레드에서 다음 코드를 실행하게 되면 `main` 스레드는 `thread-1` , `thread-2` 가 종료될 때 까지 기다린다. 
 
+이때 `main` 스레드는 `WAITING` 상태가 된다.
+
+```java
+ thread1.join();
+ thread2.join();
+```
+예를 들어서 `thread-1` 이 아직 종료되지 않았다면 `main` 스레드는 `thread1.join()` 코드 안에서 더는 진행하지 않고 멈추어 기다린다. 
+
+이후에 `thread-1` 이 종료되면 `main` 스레드는 `RUNNABLE` 상태가 되고 다음 코드로 이동한다.
+
+이때 `thread-2` 이 아직 종료되지 않았다면 `main` 스레드는 `thread2.join()` 코드 안에서 진행하지 않고 멈추어 기다린다. 
+
+이후에 `thread-2` 이 종료되면 `main` 스레드는 `RUNNABLE` 상태가 되고 다음 코드로 이동한다.
+
+이 경우 `thread-1` 이 종료되는 시점에 `thread-2` 도 거의 같이 종료되기 때문에 `thread2.join()` 은 대기하지 않고 바로 빠져나온다.
+
+**Waiting (대기 상태)**
+
+스레드가 다른 스레드의 특정 작업이 완료되기를 무기한 기다리는 상태이다.
+
+`join()` 을 호출하는 스레드는 대상 스레드가 `TERMINATED` 상태가 될 때 까지 대기한다. 
+
+대상 스레드가 `TERMINATED` 상태가 되면 호출 스레드는 다시 `RUNNABLE` 상태가 되면서 다음 코드를 수행한다.
+
+이렇듯 특정 스레드가 완료될 때 까지 기다려야 하는 상황이라면 `join()` 을 사용하면 된다.
+
+하지만 `join()` 의 단점은 다른 스레드가 완료될 때 까지 무기한 기다리는 단점이있다. 
+
+만약 다른 스레드의 작업을 일정 시간 동안만 기다리고 싶다면 어떻게 해야할까?
 
 ## join - 특정시간 만큼만 대기
+
+`join()` 은 두 가지 메서드가 있다.
+
+`join()` : 호출 스레드는 대상 스레드가 완료될 때 까지 무한정 대기한다.
+
+`join(ms)` : 호출 스레드는 특정 시간 만큼만 대기한다. 호출 스레드는 지정한 시간이 지나면 다시 `RUNNABLE` 상태가 되면서 다음 코드를 수행한다.
 
 
 
