@@ -1748,6 +1748,8 @@ public static void main(String[] args) throws InterruptedException {
 }
 ```
 
+<img width="694" alt="Screenshot 2024-10-27 at 17 19 27" src="https://github.com/user-attachments/assets/375252a2-bb02-461a-82a1-01b937cbe5a1">
+
 `main` 스레드에서 다음 코드를 실행하게 되면 `main` 스레드는 `thread-1` , `thread-2` 가 종료될 때 까지 기다린다. 
 
 이때 `main` 스레드는 `WAITING` 상태가 된다.
@@ -1756,6 +1758,7 @@ public static void main(String[] args) throws InterruptedException {
  thread1.join();
  thread2.join();
 ```
+
 예를 들어서 `thread-1` 이 아직 종료되지 않았다면 `main` 스레드는 `thread1.join()` 코드 안에서 더는 진행하지 않고 멈추어 기다린다. 
 
 이후에 `thread-1` 이 종료되면 `main` 스레드는 `RUNNABLE` 상태가 되고 다음 코드로 이동한다.
@@ -1791,6 +1794,7 @@ public static void main(String[] args) throws InterruptedException {
 
 
 
+<img width="701" alt="Screenshot 2024-10-27 at 17 22 52" src="https://github.com/user-attachments/assets/5fc07dd1-4bbf-44ff-a1af-bc6cd27979ab">
 
 
 
