@@ -1273,8 +1273,7 @@ log("myThread.getState() = " + myThread.getState());
 
 ## 스레드의 생명 주기 - 설명
 
-
-
+<img width="710" alt="Screenshot 2024-10-27 at 15 24 26" src="https://github.com/user-attachments/assets/5452afe3-8dbd-4f89-a96e-555e4e0fef5e">
 
 **스레드의 상태**
 
