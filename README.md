@@ -1613,46 +1613,116 @@ public class JoinMainV1 {
 
 <img width="686" alt="Screenshot 2024-10-27 at 16 58 36" src="https://github.com/user-attachments/assets/92068138-151d-4eac-965c-37e615db428a">
 
-
 `main` 스레드는 `thread-1` , `thread2` 에 작업을 지시하고, `thread-1` , `thread2` 가 계산을 완료하기도 전에 먼저 계산 결과를 조회했다. 
 
 참고로 `thread-1` , `thread-2` 가 계산을 완료하는데는 2초 정도의 시간이 걸린다. 따라서 결과가 `task1 + task2 = 0` 으로 출력된다.
 
-
 <img width="679" alt="Screenshot 2024-10-27 at 16 58 41" src="https://github.com/user-attachments/assets/4bfbf008-4aef-4f24-a720-3bd103d07fd9">
 
 
-프로그램이 처음 시작되면 `main` 스레드는 `thread-1` , `thread-2` 를 생성하고 `start()` 로 실행한다. `thread-1` , `thread-2` 는 각각 자신에게 전달된 `SumTask` 인스턴스의 `run()` 메서드를 스택에 올리고 실행
-한다.
+프로그램이 처음 시작되면 `main` 스레드는 `thread-1` , `thread-2` 를 생성하고 `start()` 로 실행한다. 
+
+`thread-1` , `thread-2` 는 각각 자신에게 전달된 `SumTask` 인스턴스의 `run()` 메서드를 스택에 올리고 실행한다.
+
 `thread-1` 은 `x001` 인스턴스의 `run()` 메서드를 실행한다. `thread-2` 는 `x002` 인스턴스의 `run()` 메서드를 실행한다.
 
 <img width="686" alt="Screenshot 2024-10-27 at 16 59 07" src="https://github.com/user-attachments/assets/8eb18f27-6177-44fb-8420-4c041d93bfb2">
 
+`main` 스레드는 두 스레드를 시작한 다음에 바로 `task1.result` , `task2.result` 를 통해 인스턴스에 있는 결과 값을 조회한다. 
 
-`main` 스레드는 두 스레드를 시작한 다음에 바로 `task1.result` , `task2.result` 를 통해 인스턴스에 있는 결과 값을 조회한다. 참고로 `main` 스레드가 실행한 `start()` 메서드는 스레드의 실행이 끝날 때 까지 기다리 지 않는다! 다른 스레드를 실행만 해두고, 자신의 다음 코드를 실행할 뿐이다!
-`thread-1` , `thread-2` 가 계산을 완료해서, `result` 에 연산 결과를 담을 때 까지는 약 2초 정도의 시간이 걸 린다. `main` 스레드는 계산이 끝나기 전에 `result` 의 결과를 조회한 것이다. 따라서 `0` 값이 출력된다.
+참고로 `main` 스레드가 실행한 `start()` 메서드는 스레드의 실행이 끝날 때 까지 기다리지 않는다! 
 
+다른 스레드를 실행만 해두고, 자신의 다음 코드를 실행할 뿐이다!
 
+`thread-1` , `thread-2` 가 계산을 완료해서, `result` 에 연산 결과를 담을 때 까지는 약 2초 정도의 시간이 걸린다. 
+
+`main` 스레드는 계산이 끝나기 전에 `result` 의 결과를 조회한 것이다. 따라서 `0` 값이 출력된다.
 
 <img width="690" alt="Screenshot 2024-10-27 at 16 59 18" src="https://github.com/user-attachments/assets/0a45b3d6-f3a8-4dab-9203-7319b4b16f48">
 
-
-
 2초가 지난 이후에 `thread-1` , `thread-2` 는 계산을 완료한다.
-이때 `main` 스레드는 이미 자신의 코드를 모두 실행하고 종료된 상태이다.
-`task1` 인스턴스의 `result` 에는 `1275` 가 담겨있고, `task2` 인스턴스의 `result` 에는 `3775` 가 담겨있다. 여기서 문제의 핵심은 `main` 스레드가 `thread-1` , `thread-2` 의 계산이 끝날 때 까지 기다려야 한다는 점이다. 그럼
-어떻게 해야 `main` 스레드가 기다릴 수 있을까?
 
+이때 `main` 스레드는 이미 자신의 코드를 모두 실행하고 종료된 상태이다.
+
+`task1` 인스턴스의 `result` 에는 `1275` 가 담겨있고, `task2` 인스턴스의 `result` 에는 `3775` 가 담겨있다. 
+
+여기서 문제의 핵심은 `main` 스레드가 `thread-1` , `thread-2` 의 계산이 끝날 때 까지 기다려야 한다는 점이다. 
+
+그럼 어떻게 해야 `main` 스레드가 기다릴 수 있을까?
 
 ### 참고 - this의 비밀
 
 어떤 메서드를 호출하는 것은, 정확히는 특정 스레드가 어떤 메서드를 호출하는 것이다.
-스레드는 메서드의 호출을 관리하기 위해 메서드 단위로 스택 프레임을 만들고 해당 스택 프레임을 스택위에 쌓아 올린 다.
-이때 인스턴스의 메서드를 호출하면, 어떤 인스턴스의 메서드를 호출했는지 기억하기 위해, 해당 인스턴스의 참조값을
-스택 프레임 내부에 저장해둔다. 이것이 바로 우리가 자주 사용하던 `this` 이다.
+
+스레드는 메서드의 호출을 관리하기 위해 메서드 단위로 스택 프레임을 만들고 해당 스택 프레임을 스택위에 쌓아 올린다.
+
+이때 인스턴스의 메서드를 호출하면, 어떤 인스턴스의 메서드를 호출했는지 기억하기 위해, 해당 인스턴스의 참조값을 스택 프레임 내부에 저장해둔다. 
+
+이것이 바로 우리가 자주 사용하던 `this` 이다.
+
 특정 메서드 안에서 `this` 를 호출하면 바로 스택프레임 안에 있는 `this` 값을 불러서 사용하게 된다.
-그림을 보면 스택 프레임 안에 있는 `this` 를 확인할 수 있다. 이렇게 `this` 가 있기 때문에 `thread-1` , `thread-2` 는 자신의 인스턴스를 구분해서 사용할 수 있다. 예를 들어서 필드에 접근할 때 `this` 를 생략하면 자동으로 `this` 를 참고해서 필드에 접근한다.
+
+그림을 보면 스택 프레임 안에 있는 `this` 를 확인할 수 있다. 
+
+이렇게 `this` 가 있기 때문에 `thread-1` , `thread-2` 는 자신의 인스턴스를 구분해서 사용할 수 있다. 
+
+예를 들어서 필드에 접근할 때 `this` 를 생략하면 자동으로 `this` 를 참고해서 필드에 접근한다.
+
 정리하면 `this` 는 호출된 인스턴스 메서드가 소속된 객체를 가리키는 참조이며, 이것이 스택 프레임 내부에 저장되어 있다.
+
+## join - sleep 사용
+
+
+```java
+public static void main(String[] args) {
+    log("start");
+    SumTask task1 = new SumTask(1, 50);
+    SumTask task2 = new SumTask(51, 100);
+
+    Thread t1 = new Thread(task1, "thread-1");
+    Thread t2 = new Thread(task2, "thread-2");
+
+    t1.start();
+    t2.start();
+    log("main 쓰레드 sleep");
+    sleep(3000);
+    log("main 쓰레드 wakeup");
+
+    log("task1.result = " + task1.result);
+    log("task2.result = " + task2.result);
+
+    int sumAll = task1.result + task2.result;
+
+    log("sumAll = " + sumAll);
+    log("end");
+
+}
+```
+
+하지만 이렇게 `sleep()` 을 사용해서 무작정? 기다리는 방법은 대기 시간에 손해도 보고, 또 `thread-1` , `thread-2` 의 수행시간이 달라지는 경우에는 정확한 타이밍을 맞추기 어렵다.
+
+더 나은 방법은 `thread-1` , `thread-2` 가 계산을 끝내고 종료될 때 까지 `main` 스레드가 기다리는 방법이다.
+
+예를 들어서 `main` 스레드가 반복문을 사용해서 `thread-1` , `thread-2` 의 상태가 `TERMINATED` 가 될 때 까지 계속 확인하는 방법이 있다.
+
+
+
+```java
+while(thread.getState() != TERMINATED) { //스레드의 상태가 종료될 때 까지 계속 반복
+}
+//계산 결과 출력 
+```
+
+이런 방법은 번거롭고 또 계속되는 반복문은 CPU 연산을 사용한다. 
+
+이때 `join()` 메서드를 사용하면 깔끔하게 문제를 해결할 수 있다.
+
+## join - join 사용
+
+
+
+
+## join - 특정시간 만큼만 대기
 
 
 
