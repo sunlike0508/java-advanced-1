@@ -1713,6 +1713,8 @@ while(thread.getState() != TERMINATED) { //스레드의 상태가 종료될 때 
 //계산 결과 출력 
 ```
 
+<img width="694" alt="Screenshot 2024-10-27 at 17 16 50" src="https://github.com/user-attachments/assets/02de6a5a-ae12-439f-a66e-d9d89e9e46a9">
+
 이런 방법은 번거롭고 또 계속되는 반복문은 CPU 연산을 사용한다. 
 
 이때 `join()` 메서드를 사용하면 깔끔하게 문제를 해결할 수 있다.
