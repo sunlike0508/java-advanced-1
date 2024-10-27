@@ -1137,16 +1137,236 @@ public class MultiThreadMain {
 
 # 스레드 제어와 생명 주기1
 
+```java
+public class ThreadInfoMain {
+
+    public static void main(String[] args) {
+        Thread mainThread = Thread.currentThread();
+
+        log("mainThread = " + mainThread);
+        log("mainThread = " + mainThread.threadId());
+        log("mainThread = " + mainThread.getName());
+        log("mainThread = " + mainThread.getPriority());
+        log("mainThread = " + mainThread.getThreadGroup());
+        log("mainThread = " + mainThread.getState());
+
+
+        Thread myThread = new Thread(new HelloThread(), "myThread");
+
+        log("myThread = " + myThread);
+        log("myThread = " + myThread.threadId());
+        log("myThread = " + myThread.getName());
+        log("myThread = " + myThread.getPriority());
+        log("myThread = " + myThread.getThreadGroup());
+        log("myThread = " + myThread.getState());
+    }
+}
+```
+
+```shell
+15:15:48.368 [     main] mainThread = Thread[#1,main,5,main]
+15:15:48.373 [     main] mainThread = 1
+15:15:48.373 [     main] mainThread = main
+15:15:48.375 [     main] mainThread = 5
+15:15:48.375 [     main] mainThread = java.lang.ThreadGroup[name=main,maxpri=10]
+15:15:48.376 [     main] mainThread = RUNNABLE
+15:15:48.376 [     main] myThread = Thread[#23,myThread,5,main]
+15:15:48.376 [     main] myThread = 23
+15:15:48.376 [     main] myThread = myThread
+15:15:48.377 [     main] myThread = 5
+15:15:48.377 [     main] myThread = java.lang.ThreadGroup[name=main,maxpri=10]
+15:15:48.377 [     main] myThread = NEW
+```
+
+1. 스레드 생성
+   스레드를 생성할 때는 실행할 `Runnable` 인터페이스의 구현체와, 스레드의 이름을 전달할 수 있다.
+```java
+Thread myThread = new Thread(new HelloRunnable(), "myThread"); 
+```
+
+**Runnable 인터페이스**: 실행할 작업을 포함하는 인터페이스이다. `HelloRunnable` 클래스는 `Runnable` 인 터페이스를 구현한 클래스이다.
+
+**스레드 이름**: `"myThread"` 라는 이름으로 스레드를 생성한다. 이 이름은 디버깅이나 로깅 목적으로 유용하다. 참고로 이름을 생략하면 `Thread-0` , `Thread-1` 과 같은 임의의 이름이 생성된다.
+
+2. 스레드 객체 정보
+
+```
+log("myThread = " + myThread); 
+```
+
+`myThread` 객체를 문자열로 변환하여 출력한다. `Thread` 클래스의 `toString()` 메서드는 스레드 ID, 스레 드 이름, 우선순위, 스레드 그룹을 포함하는 문자열을 반환한다.
+
+
+3. 스레드 ID 
+
+```java
+log("myThread.threadId() = " + myThread.threadId()); 
+```
+
+**threadId()**: 스레드의 고유 식별자를 반환하는 메서드이다. 이 ID는 JVM 내에서 각 스레드에 대해 유일하다. ID는 스레드가 생성될 때 할당되며, 직접 지정할 수 없다.
+
+4. 스레드 이름 
+
+```java
+log("myThread.getName() = " + myThread.getName());
+```
+
+**getName()**: 스레드의 이름을 반환하는 메서드이다. 
+
+생성자에서 `"myThread"` 라는 이름을 지정했기 때문에, 이 값이 반환된다. 참고로 스레드 ID는 중복되지 않지만, 스레드 이름은 중복될 수 있다.
+
+5. 스레드 우선순위 
+
+```java
+log("myThread.getPriority() = " + myThread.getPriority()); 
+```
+
+**getPriority()**: 스레드의 우선순위를 반환하는 메서드이다. 우선순위는 1 (가장 낮음)에서 10 (가장 높음)까지의 값으로 설정할 수 있으며, 기본값은 5이다. `setPriority()` 메서드를 사용해서 우선순위를 변경할 수 있다. 
+
+우선순위는 스레드 스케줄러가 어떤 스레드를 우선 실행할지 결정하는 데 사용된다. 하지만 실제 실행 순서는 JVM 구현과 운영체제에 따라 달라질 수 있다.
+
+6. 스레드 그룹
+
+```java
+log("myThread.getThreadGroup() = " + myThread.getThreadGroup());
+```
+
+**getThreadGroup()**: 스레드가 속한 스레드 그룹을 반환하는 메서드이다. 스레드 그룹은 스레드를 그룹화하여 관리할 수 있는 기능을 제공한다. 
+
+기본적으로 모든 스레드는 부모 스레드와 동일한 스레드 그룹에 속하게 된다. 
+
+스레드 그룹은 여러 스레드를 하나의 그룹으로 묶어서 특정 작업(예: 일괄 종료, 우선순위 설정 등)을 수행할 수 있다.
+
+**부모 스레드(Parent Thread)**: 
+
+새로운 스레드를 생성하는 스레드를 의미한다. 
+
+스레드는 기본적으로 다른 스레드 에 의해 생성된다. 이러한 생성 관계에서 새로 생성된 스레드는 생성한 스레드를 **부모**로 간주한다. 
+
+예를 들어 `myThread` 는 `main` 스레드에 의해 생성되었으므로 `main` 스레드가 부모 스레드이다.
+
+`main` 스레드는 기본으로 제공되는 `main` 스레드 그룹에 소속되어 있다. 따라서 `myThread` 도 부모 스레드인 `main` 스레드의 그룹인 `main` 스레드 그룹에 소속된다.
+
+**참고**: 스레드 그룹 기능은 직접적으로 잘 사용하지는 않기 때문에, 이런 것이 있구나 정도만 알고 넘어가자
+
+7. 스레드 상태 
+
+```java
+log("myThread.getState() = " + myThread.getState()); 
+```
+
+**getState()**: 스레드의 현재 상태를 반환하는 메서드이다. 반환되는 값은 `Thread.State` 열거형에 정의된 상 수 중 하나이다. 주요 상태는 다음과 같다.
+
+* **NEW**: 스레드가 아직 시작되지 않은 상태이다.
+
+* **RUNNABLE**: 스레드가 실행 중이거나 실행될 준비가 된 상태이다. 
+
+* **BLOCKED**: 스레드가 동기화 락을 기다리는 상태이다.
+
+* **WAITING**: 스레드가 다른 스레드의 특정 작업이 완료되기를 기다리는 상태이다. 
+
+* **TIMED_WAITING**: 일정 시간 동안 기다리는 상태이다.
+
+* **TERMINATED**: 스레드가 실행을 마친 상태이다.
+
+출력 결과를 보면 `main` 스레드는 실행 중이기 때문에 `RUNNABLE` 상태이다. `myThread` 는 생성하고 아직 시작하지 않았기 때문에, `NEW` 상태이다.
+
+## 스레드의 생명 주기 - 설명
 
 
 
 
+**스레드의 상태**
 
+* **New (새로운 상태)**: 스레드가 생성되었으나 아직 시작되지 않은 상태.
+* **Runnable (실행 가능 상태)**: 스레드가 실행 중이거나 실행될 준비가 된 상태.
+* **일시 중지 상태들 (Suspended States)**
+  * **Blocked (차단 상태)**: 스레드가 동기화 락을 기다리는 상태.
+  * **Waiting (대기 상태)**: 스레드가 무기한으로 다른 스레드의 작업을 기다리는 상태.
+  * **Timed Waiting (시간 제한 대기 상태)**: 스레드가 일정 시간 동안 다른 스레드의 작업을 기다리는 상태.
+* **Terminated (종료 상태)**: 스레드의 실행이 완료된 상태.
 
+**참고**: 자바에서 스레드의 **일시 중지 상태들(Suspended States)** 이라는 상태는 없다. 스레드가 기다리는 상태들
+을 묶어서 쉽게 설명하기 위해 사용한 용어이다.
 
+자바 스레드(Thread)의 생명 주기는 여러 상태(state)로 나뉘어지며, 각 상태는 스레드가 실행되고 종료되기까지의 과정을 나타낸다.
 
+자바 스레드의 생명 주기를 자세히 알아보자.
 
+1. **New (새로운 상태)**
 
+스레드가 생성되고 아직 시작되지 않은 상태이다. 
+ 
+이 상태에서는 `Thread` 객체가 생성되지만, `start()` 메서드가 호출되지 않은 상태이다. 
+
+예: `Thread thread = new Thread(runnable);`
+
+2. **Runnable (실행 가능 상태)**
+
+스레드가 실행될 준비가 된 상태이다. 이 상태에서 스레드는 실제로 CPU에서 실행될 수 있다.
+
+`start()` 메서드가 호출되면 스레드는 이 상태로 들어간다.
+
+예: `thread.start();`
+
+이 상태는 스레드가 실행될 준비가 되어 있음을 나타내며, 실제로 CPU에서 실행될 수 있는 상태이다. 
+
+그러나 Runnable 상태에 있는 모든 스레드가 동시에 실행되는 것은 아니다. 
+
+운영체제의 스케줄러가 각 스레드에 CPU 시간을 할당하여 실행하기 때문에, Runnable 상태에 있는 스레드는 스케줄러의 실행 대기열에 포함되어 있다가 차례로 CPU에서 실행된다.
+
+참고로 운영체제 스케줄러의 실행 대기열에 있든, CPU에서 실제 실행되고 있든 모두 `RUNNABLE` 상태이다. 
+
+자바에서 둘을 구분해서 확인할 수는 없다.
+
+보통 실행 상태라고 부른다.
+
+3. **Blocked (차단 상태)**
+ 
+스레드가 다른 스레드에 의해 동기화 락을 얻기 위해 기다리는 상태이다.
+
+예를 들어, `synchronized` 블록에 진입하기 위해 락을 얻어야 하는 경우 이 상태에 들어간다.
+
+예: `synchronized (lock) { ... }` 코드 블록에 진입하려고 할 때, 다른 스레드가 이미 `lock` 의 락을 가지고 있는 경우.
+
+지금은 이런 상태가 있다 정도만 알아두자. 이 부분은 뒤에서 자세히 다룬다.
+
+4. **Waiting (대기 상태)**
+
+스레드가 다른 스레드의 특정 작업이 완료되기를 무기한 기다리는 상태이다.
+
+`wait()` , `join()` 메서드가 호출될 때 이 상태가 된다.
+
+스레드는 다른 스레드가 `notify()` 또는 `notifyAll()` 메서드를 호출하거나, `join()` 이 완료될 때까지 기다린다.
+
+예: `object.wait();`
+
+지금은 이런 상태가 있다 정도만 알아두자. 이 부분은 뒤에서 자세히 다룬다.
+
+5. **Timed Waiting (시간 제한 대기 상태)**
+
+스레드가 특정 시간 동안 다른 스레드의 작업이 완료되기를 기다리는 상태이다.
+
+`sleep(long millis)` , `wait(long timeout)` , `join(long millis)` 메서드가 호출될 때 이 상태가 된다.
+
+주어진 시간이 경과하거나 다른 스레드가 해당 스레드를 깨우면 이 상태에서 벗어난다.
+
+예: `Thread.sleep(1000);`
+
+지금은 이런 상태가 있다 정도만 알아두자. 이 부분은 뒤에서 자세히 다룬다.
+
+6. **Terminated (종료 상태)**
+
+스레드의 실행이 완료된 상태이다.
+
+스레드가 정상적으로 종료되거나, 예외가 발생하여 종료된 경우 이 상태로 들어간다. 스레드는 한 번 종료되면 다시 시작할 수 없다.
+
+**자바 스레드의 상태 전이 과정**
+
+1. **New → Runnable**: `start()` 메서드를 호출하면 스레드가 `Runnable` 상태로 전이된다.
+2. **Runnable → Blocked/Waiting/Timed Waiting**: 스레드가 락을 얻지 못하거나, `wait()` 또는 `sleep()` 메서드를 호출할 때 해당 상태로 전이된다.
+3. **Blocked/Waiting/Timed Waiting → Runnable**: 스레드가 락을 얻거나, 기다림이 완료되면 다시 `Runnable` 상태로 돌아간다.
+4. **Runnable → Terminated**: 스레드의 `run()` 메서드가 완료되면 스레드는 `Terminated` 상태가 된다.
 
 
 
