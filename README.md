@@ -1867,11 +1867,11 @@ public class ThreadStopMainV1 {
     }
 }
 ```
-
+<img width="687" alt="Screenshot 2024-10-28 at 22 12 35" src="https://github.com/user-attachments/assets/85539536-b465-40f3-9056-de0e31deaaf0">
 
 `work` 스레드는 `runFlag` 가 `true` 인 동안 계속 실행된다.
 
-
+<img width="691" alt="Screenshot 2024-10-28 at 22 12 56" src="https://github.com/user-attachments/assets/026d4381-d36d-42df-9621-72bfb2d50f76">
 
 프로그램 시작 후 4초 뒤에 `main` 스레드는 `runFlag` 를 `false` 로 변경한다.
 
@@ -1988,9 +1988,7 @@ public class ThreadStopMainV2 {
 
 `Thread.sleep()` 처럼 `InterruptedException` 을 던지는 메서드를 호출하거나 또는 호출하며 대기중일 때 예외가 발생한다.
 
-
-
-
+<img width="704" alt="Screenshot 2024-10-28 at 22 32 17" src="https://github.com/user-attachments/assets/aadb0fa4-8054-41ff-ac13-8c41108e4950">
 
 `main` 스레드가 4초 뒤에 `work` 스레드에 `interrupt()` 를 건다.
 
