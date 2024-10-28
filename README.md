@@ -1831,9 +1831,184 @@ public static void main(String[] args) throws InterruptedException {
 
 물론 기다리다 중간에 나오는 상황인데, 결과가 없다면 추가적인 오류 처리가 필요 할 수 있다.
 
+# 쓰레드 제어와 생명주기2
+
+## 인터럽트 - 시작1
+
+특정 스레드의 작업을 중간에 중단하려면 어떻게 해야할까?
+
+```java
+public class ThreadStopMainV1 {
+
+    public static void main(String[] args) {
+        MyTask myTask = new MyTask();
+        Thread thread = new Thread(myTask, "work");
+        thread.start();
+
+        sleep(4000);
+        log("작업 중단 지시");
+        myTask.runFlag = false;
+    }
+
+    static class MyTask implements Runnable {
+
+        volatile boolean runFlag = true;
+
+        @Override
+        public void run() {
+            while (runFlag) {
+                log("작업중");
+                sleep(3000);
+            }
+
+            log("자원정리");
+            log("작업종료");
+        }
+    }
+}
+```
+
+
+`work` 스레드는 `runFlag` 가 `true` 인 동안 계속 실행된다.
 
 
 
+프로그램 시작 후 4초 뒤에 `main` 스레드는 `runFlag` 를 `false` 로 변경한다.
+
+`work` 스레드는 `while(runFlag)` 에서 `runFlag` 의 조건이 `false` 로 변한 것을 확인하고, while문을 빠져 나가면서 작업을 종료한다.
+
+**문제점**
+
+실행을 해보면 알겠지만 `main` 스레드가 `runFlag=false` 를 통해 작업 중단을 지시해도, `work` 스레드가 즉각 반응하지 않는다. 
+
+로그를 보면 작업 중단 지시 2초 정도 이후에 자원을 정리하고 작업을 종료한다. 
+
+```shell
+22:12:16.605 [     work] 작업중
+22:12:19.612 [     work] 작업중
+22:12:20.596 [     main] 작업 중단 지시
+22:12:22.619 [     work] 자원정리 //2초 정도 경과후 실행 work]
+22:12:22.620 [     work] 작업종료
+```
+
+이 방식의 가장 큰 문제는 다음 코드의 `sleep()` 에 있다. 
+
+```java
+while (runFlag) { 
+    log("작업 중");
+    sleep(3000);
+}
+```
+
+`main` 스레드가 `runFlag` 를 `false` 로 변경해도, `work` 스레드는 `sleep(3000)` 을 통해 3초간 잠들어 있다. 
+
+3초간의 잠이 깬 다음에 `while(runFlag)` 코드를 실행해야, `runFlag` 를 확인하고 작업을 중단할 수 있다.
+
+참고로 `runFlag` 를 변경한 후 2초라는 시간이 지난 이후에 작업이 종료되는 이유는 `work` 스레드가 3초에 한 번씩 깨어나서 `runFlag` 를 확인하는데, `main` 스레드가 4초에 `runFlag` 를 변경했기 때문이다.
+
+`work` 스레드 입장에서 보면 두 번째 `sleep()` 에 들어가고 1초 후 `main` 스레드가 `runFlag` 를 변경한다. 
+
+3초간 `sleep()` 이므로 아직 2초가 더 있어야 깨어난다.
+
+어떻게 하면 `sleep()` 처럼 스레드가 대기하는 상태에서 스레드를 깨우고, 작업도 빨리 종료할 수 있을까?
+
+## 인터럽트 - 시작2
+
+예를 들어서, 특정 스레드가 `Thread.sleep()` 을 통해 쉬고 있는데, 처리해야 하는 작업이 들어와서 해당 스레드를 급하게 깨워야 할 수 있다. 
+
+또는 `sleep()` 으로 쉬고 있는 스레드에게 더는 일이 없으니, 작업 종료를 지시 할 수도 있다. 
+
+인터럽트를 사용하면, `WAITING` , `TIMED_WAITING` 같은 대기 상태의 스레드를 직접 깨워서, 작동하는 `RUNNABLE`상태로 만들 수 있다.
+
+앞서 작성한 예제의 작업 중단 지시를 인터럽트를 통해 처리해보자.
+
+```java
+public class ThreadStopMainV2 {
+
+  public static void main(String[] args) {
+    MyTask myTask = new MyTask();
+    Thread thread = new Thread(myTask, "work");
+    thread.start();
+
+    sleep(4000);
+    log("작업 중단 지시");
+    thread.interrupt();
+    log("work 쓰레드 인터럽트 상태1 = " + thread.isInterrupted());
+  }
+
+  static class MyTask implements Runnable {
+
+    @Override
+    public void run() {
+      try {
+        while (true) {
+          log("작업중");
+          Thread.sleep(3000);
+        }
+      } catch(InterruptedException e) {
+        log("work 쓰레드 인터럽트 상태2 = " + Thread.currentThread().isInterrupted());
+        log("message =" + e.getMessage());
+        log("state = " + Thread.currentThread().getState());
+      }
+
+      log("자원정리");
+      log("작업종료");
+    }
+  }
+}
+```
+
+```shell
+22:29:57.691 [     work] 작업중
+22:30:00.698 [     work] 작업중
+22:30:01.680 [     main] 작업 중단 지시
+22:30:01.691 [     main] work 쓰레드 인터럽트 상태1 = true
+22:30:01.691 [     work] work 쓰레드 인터럽트 상태2 = false
+22:30:01.692 [     work] message = sleep interrupted
+22:30:01.693 [     work] state = RUNNABLE
+22:30:01.693 [     work] 자원정리
+22:30:01.693 [     work] 작업종료
+```
+
+특정 스레드의 인스턴스에 `interrupt()` 메서드를 호출하면, 해당 스레드에 인터럽트가 발생한다. 
+
+인터럽트가 발생하면 해당 스레드에 `InterruptedException` 이 발생한다.
+
+이때 인터럽트를 받은 스레드는 대기 상태에서 깨어나 `RUNNABLE` 상태가 되고, 코드를 정상 수행한다.
+
+이때 `InterruptedException` 을 `catch` 로 잡아서 정상 흐름으로 변경하면 된다.
+
+***참고로 `interrupt()` 를 호출했다고 해서 즉각 `InterruptedException` 이 발생하는 것은 아니다.***
+
+***오직 `sleep()` 처럼 `InterruptedException` 을 던지는 메서드를 호출 하거나 또는 호출 중일 때 예외가 발생한다.***
+
+(이건 몰랐던 사실이네)
+
+예를 들어서 위 코드에서 `while(true)` , `log("작업 중")` 에서는 `InterruptedException` 이 발생하지 않는다.
+
+`Thread.sleep()` 처럼 `InterruptedException` 을 던지는 메서드를 호출하거나 또는 호출하며 대기중일 때 예외가 발생한다.
+
+
+
+
+
+`main` 스레드가 4초 뒤에 `work` 스레드에 `interrupt()` 를 건다.
+
+`work` 스레드는 인터럽트 상태(`true` )가 된다.
+
+스레드가 인터럽트 상태일 때는, `sleep()` 처럼 `InterruptedException` 이 발생하는 메서드를 호출하거나 또는 이미 호출하고 대기 중이라면  `InterruptedException` 이 발생한다.
+
+이때 2가지 일이 발생한다.
+
+`work` 스레드는 `TIMED_WAITING` 상태에서 `RUNNABLE` 상태로 변경되고, `InterruptedException` 예외를 처리하면서 반복문을 탈출한다.
+
+`work` 스레드는 인터럽트 상태가 되었고, 인터럽트 상태이기 때문에 인터럽트 예외가 발생한다.
+
+인터럽트 상태에서 인터럽트 예외가 발생하면 `work` 스레드는 다시 작동하는 상태가 된다. 
+
+따라서 `work` 스레드의 인터럽트 상태는 종료된다.
+
+`work` 스레드의 인터럽트 상태는 `false` 로 변경된다.
 
 
 
