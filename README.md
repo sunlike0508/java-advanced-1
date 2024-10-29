@@ -2008,6 +2008,212 @@ public class ThreadStopMainV2 {
 
 `work` 스레드의 인터럽트 상태는 `false` 로 변경된다.
 
+## 인터럽트 - 시작3
+
+그런데 앞선 코드에서 한가지 아쉬운 부분이 있다.
+
+```java
+while (true) { //인터럽트 체크 안함 log("작업 중");
+    Thread.sleep(3000); //여기서만 인터럽트 발생 
+}
+```
+여기서 `while(true)` 부분은 체크를 하지 않는다는 점이다. 
+
+인터럽트가 발생해도 이 부분은 항상 `true` 이기 때문에 다음 코드로 넘어간다. 
+
+그리고 `sleep()` 을 호출하고 나서야 인터럽트가 발생하는 것이다.
+
+다음과 같이 인터럽트의 상태를 확인하면, 더 빨리 반응할 수 있을 것이다. 
+
+```java
+while (인터럽트_상태_확인) { //여기서도 인터럽트 상태 체크 log("작업 중");
+Thread.sleep(3000); //인터럽트 발생
+}
+```
+
+이 코드와 같이 인터럽트의 상태를 확인하면 while문을 체크하는 부분에서 더 빠르게 while문을 빠져나갈 수 있다. 
+
+물론 이 예제의 경우 코드가 단순해서 실질적인 차이는 매우 작다.
+
+추가로 인터럽트의 상태를 직접 확인하면, 다음과 같이 인터럽트를 발생 시키는 `sleep()` 과 같은 코드가 없어도 인터럽트 상태를 직접 확인하기 때문에 while문을 빠져나갈 수 있다.
+
+```java
+while (인터럽트_상태_확인) { //여기서도 체크 log("작업 중");
+}
+```
+while문에서 인터럽트의 상태를 직접 확인하도록 코드를 변경해보자.
+
+추가로 예제를 단순화하고 더 직접적인 이해를 돕기 위해 `run()` 의 반복문에서 `sleep()` 코드도 함께 제거하자.
+
+```java
+public class ThreadStopMainV3 {
+
+    public static void main(String[] args) {
+        MyTask myTask = new MyTask();
+        Thread thread = new Thread(myTask, "work");
+        thread.start();
+
+        sleep(100);
+        log("작업 중단 지시");
+        thread.interrupt();
+        log("work 쓰레드 인터럽트 상태1 = " + thread.isInterrupted());
+    }
+
+    static class MyTask implements Runnable {
+
+        @Override
+        public void run() {
+
+            while(!Thread.currentThread().isInterrupted()) {
+                log("작업중");
+            }
+
+            log("work 쓰레드 인터럽트 상태2 = " + Thread.currentThread().isInterrupted());
+
+            try {
+                log("자원정리");
+                Thread.sleep(1000);
+                log("작업종료");
+            } catch(InterruptedException e) {
+                log("자원 정리 실패 - 인터럽트 발생");
+                log("work 쓰레드 인터럽트 상태3 = " + Thread.currentThread().isInterrupted());
+            }
+        }
+    }
+}
+```
+
+```shell
+22:49:36.267 [     work] 작업중
+22:49:36.267 [     main] 작업 중단 지시
+22:49:36.267 [     work] 작업중
+22:49:36.270 [     main] work 쓰레드 인터럽트 상태1 = true
+22:49:36.270 [     work] work 쓰레드 인터럽트 상태2 = true
+22:49:36.271 [     work] 자원정리
+22:49:36.271 [     work] 자원 정리 실패 - 인터럽트 발생
+22:49:36.271 [     work] work 쓰레드 인터럽트 상태3 = false
+```
+
+**주요 실행 순서**
+
+`main` 스레드는 `interrupt()` 메서드를 사용해서, `work` 스레드에 인터럽트를 건다. 
+
+`work` 스레드는 인터럽트 상태이다. `isInterrupted()=true` 가 된다.
+
+이때 다음과 같이 while 조건이 `false` 가 되면서 while문을 탈출한다.
+
+여기까지 보면 아무런 문제가 없어 보인다. 하지만 이 코드에는 심각한 문제가 있다.
+
+바로 `work` 스레드의 인터럽트 상태가 `true` 로 계속 유지된다는 점이다.
+
+앞서 인터럽트 예외가 터진 경우 스레드의 인터럽트 상태는 `false` 가 된다.
+
+반면에 `isInterrupted()` 메서드는 인터럽트의 상태를 변경하지 않는다. 단순히 인터럽트의 상태를 확인만 한다.
+
+`work` 스레드는 이후에 자원을 정리하는 코드를 실행하는데, 이때도 인터럽트의 상태는 계속 `true` 로 유지된다. 
+
+이때 만약 인터럽트가 발생하는 `sleep()` 과 같은 코드를 수행한다면, 해당 코드에서 인터럽트 예외가 발생하게 된다.
+
+(내가 정리 : 위의 코드를 보면 작업을 하다가 중단되고 작업하던 자원을 정리해야하는데 인터럽트가 계속해서 살아있기 때문에 자원 정리에도 실패한다.)
+
+이것은 우리가 기대한 결과가 아니다! 
+
+우리가 기대하는 것은 `while()` 문을 탈출하기 위해 딱 한 번만 인터럽트를 사용 하는 것이지, 다른 곳에서도 계속해서 인터럽트가 발생하는 것이 아니다.
+
+**자바에서 인터럽트 예외가 한 번 발생하면, 스레드의 인터럽트 상태를 다시 정상( `false` )으로 돌리는 것은 이런 이유 때문이다.**
+
+**스레드의 인터럽트 상태를 정상으로 돌리지 않으면 이후에도 계속 인터럽트가 발생하게 된다.**
+
+**인터럽트의 목적을 달성하면 인터럽트 상태를 다시 정상으로 돌려두어야 한다.**
+
+참고로 이 예제에서 자원 정리에 실패할 때 인터럽트 예외가 발생하면서 인터럽트의 상태가 정상( `false` )으로 돌아온다.
+
+```
+work 스레드 인터럽트 상태3 = false 
+```
+
+그럼 우리는 어떻게 해야할까?
+
+`while(인터럽트_상태_확인)` 같은 곳에서 인터럽트의 상태를 확인한 다음에, 만약 인터럽트 상태( `true` )라면 인터럽트 상태를 다시 정상( `false` )으로 돌려두면 된다.
+
+## 인터럽트 - 시작4
+
+**Thread.interrupted()**
+
+스레드의 인터럽트 상태를 단순히 확인만 하는 용도라면 `isInterrupted()` 를 사용하면 된다. 
+
+하지만 직접 체크해서 사용할 때는 `Thread.interrupted()` 를 사용해야 한다.
+
+이 메서드는 다음과 같이 작동한다.
+
+스레드가 인터럽트 상태라면 `true` 를 반환하고, 해당 스레드의 인터럽트 상태를 `false` 로 변경한다. 
+
+스레드가 인터럽트 상태가 아니라면 `false` 를 반환하고, 해당 스레드의 인터럽트 상태를 변경하지 않는다.
+
+```java
+public class ThreadStopMainV4 {
+
+    public static void main(String[] args) {
+        MyTask myTask = new MyTask();
+        Thread thread = new Thread(myTask, "work");
+        thread.start();
+
+        sleep(100);
+        log("작업 중단 지시");
+        thread.interrupt();
+        log("work 쓰레드 인터럽트 상태1 = " + thread.isInterrupted());
+    }
+
+    static class MyTask implements Runnable {
+
+        @Override
+        public void run() {
+
+            while(!Thread.interrupted()) { // V3에서 여기만 변경
+                log("작업중");
+            }
+
+            log("work 쓰레드 인터럽트 상태2 = " + Thread.currentThread().isInterrupted());
+
+            try {
+                log("자원정리");
+                Thread.sleep(1000);
+                log("작업종료");
+            } catch(InterruptedException e) {
+                log("자원 정리 실패 - 인터럽트 발생");
+                log("work 쓰레드 인터럽트 상태3 = " + Thread.currentThread().isInterrupted());
+            }
+        }
+    }
+}
+```
+
+```shell
+22:59:20.614 [     work] 작업중
+22:59:20.614 [     work] 작업중
+22:59:20.614 [     main] 작업 중단 지시
+22:59:20.614 [     work] 작업중
+22:59:20.617 [     main] work 쓰레드 인터럽트 상태1 = true
+22:59:20.618 [     work] work 쓰레드 인터럽트 상태2 = false
+22:59:20.618 [     work] 자원정리
+22:59:21.623 [     work] 작업종료
+```
+
+`work` 스레드는 이후에 자원을 정리하는 코드를 실행하는데, 이때 인터럽트의 상태는 `false` 이므로 인터럽트가 발생하는 `sleep()` 과 같은 코드를 수행해도 인터럽트가 발생하지 않는다. 이후에 자원을 정상적으로 잘 정리하는 것을 확인할 수 있다.
+
+**자바는 인터럽트 예외가 한 번 발생하면, 스레드의 인터럽트 상태를 다시 정상( `false` )으로 돌린다.** 
+
+**스레드의 인터럽트 상태를 정상으로 돌리지 않으면 이후에도 계속 인터럽트가 발생하게 된다.** 
+
+**인터럽트의 목적을 달성하면 인터럽트 상태를 다시 정상으로 돌려두어야 한다.**
+
+인터럽트의 상태를 직접 체크해서 사용하는 경우 `Thread.interrupted()` 를 사용하면 이런 부분이 해결된다. 
+
+참고로 `isInterrupted()` 는 특정 스레드의 상태를 변경하지 않고 확인할 때 사용한다.
+
+물론 꼭 이것만이 정답은 아니다. 
+
+예를 들어 너무 긴급한 상황이어서 자원 정리도 하지 않고, 최대한 빨리 스레드를 종료 해야 한다면 해당 스레드를 다시 인터럽트 상태로 변경하는 것도 방법이다.
 
 
 
