@@ -2215,10 +2215,4 @@ public class ThreadStopMainV4 {
 
 예를 들어 너무 긴급한 상황이어서 자원 정리도 하지 않고, 최대한 빨리 스레드를 종료 해야 한다면 해당 스레드를 다시 인터럽트 상태로 변경하는 것도 방법이다.
 
-
-
-
-
-
-
-
+[메모리 가시성] (https://github.com/sunlike0508/java-advanced-1/blob/main/README2.md)
