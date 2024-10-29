@@ -1142,13 +1142,7 @@ public class MyPrinterV1 {
 
 `Queue` 의 경우 `ConcurrentLinkedQueue` 를 사용하면 된다. 동시성 컬렉션의 자세한 내용은 뒤에서 설명한다. 여기서는 일반 큐라고 생각하면 된다.
 
-
-
-
-
-
-
-
+<img width="686" alt="Screenshot 2024-10-29 at 22 48 44" src="https://github.com/user-attachments/assets/01b41c35-98c3-4584-b7ea-66ad48d99c64">
 
 main` 스레드: 사용자의 입력을 받아서 `Printer` 인스턴스의 `jobQueue` 에 담는다. 
 
@@ -1162,13 +1156,7 @@ main` 스레드: 사용자의 입력을 받아서 `Printer` 인스턴스의 `job
 
 만약 `jobQueue` 가 비었다면 `continue` 를 사용해서 다시 while문을 반복한다. 이렇게 해서 `jobQueue` 에 출력할 내용이 들어올 때 까지 계속 확인한다.
 
-
-
-
-
-
-
-
+<img width="683" alt="Screenshot 2024-10-29 at 22 49 18" src="https://github.com/user-attachments/assets/6dc09fa9-9936-47a3-a4ee-a10753dfaeb0">
 
 `main` 스레드: 사용자가 `q` 를 입력한다. `printer.work` 의 값을 `false` 로 변경한다.
 
