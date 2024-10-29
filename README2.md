@@ -1077,3 +1077,130 @@ public class ThreadStopMainV4 {
 물론 꼭 이것만이 정답은 아니다. 
 
 예를 들어 너무 긴급한 상황이어서 자원 정리도 하지 않고, 최대한 빨리 스레드를 종료 해야 한다면 해당 스레드를 다시 인터럽트 상태로 변경하는 것도 방법이다.
+
+
+## 프린터 예제 1
+
+
+```java
+public class MyPrinterV1 {
+
+    public static void main(String[] args) {
+        Printer printer = new Printer();
+        Thread printThread = new Thread(printer, "printer");
+        printThread.start();
+
+        Scanner scanner = new Scanner(System.in);
+        while (true) {
+            log("프린터할 문서를 입력해: 종료(q): ");
+
+            String input = scanner.nextLine();
+
+            if(input.equals("q")) {
+               printer.work = false;
+               break;
+            }
+
+            printer.addJob(input);
+        }
+    }
+
+    static class Printer implements Runnable {
+        volatile boolean work = true;
+        Queue<String> jobQueue = new ConcurrentLinkedQueue<>();
+
+        @Override
+        public void run() {
+            while (work) {
+                if(jobQueue.isEmpty()) {
+                    continue;
+                }
+
+                String job = jobQueue.poll();
+                log("출력 시작" + job + ", 대기 문서: " + jobQueue);
+                sleep(3000);
+                log("출력 완료");
+            }
+
+            log("프린터 종료");
+        }
+
+        public void addJob(String input) {
+            jobQueue.add(input);
+        }
+    }
+}
+```
+
+`volatile` : 여러 스레드가 동시에 접근하는 변수에는 `volatile` 키워드를 붙어주어야 안전하다. 
+
+여기서는 `main` 스레드, `printer` 스레드 둘다 `work` 변수에 동시에 접근할 수 있다. `volatile` 에 대한 자세한 내용은 뒤에서 설명한다.
+
+`ConcurrentLinkedQueue` : 여러 스레드가 동시에 접근하는 경우, 컬렉션 프레임워크가 제공하는 일반적인 자료구조를 사용하면 안전하지 않다. 
+
+여러 스레드가 동시에 접근하는 경우 동시성을 지원하는 동시성 컬렉션을 사용해야 한다. 
+
+`Queue` 의 경우 `ConcurrentLinkedQueue` 를 사용하면 된다. 동시성 컬렉션의 자세한 내용은 뒤에서 설명한다. 여기서는 일반 큐라고 생각하면 된다.
+
+
+
+
+
+
+
+
+
+main` 스레드: 사용자의 입력을 받아서 `Printer` 인스턴스의 `jobQueue` 에 담는다. 
+
+`printer` 스레드: `jobQueue` 가 있는지 확인한다.
+
+`jobQueue` 에 내용이 있으면 `poll()` 을 이용해서 꺼낸 다음에 출력한다.
+
+출력하는데는 약 3초의 시간이 걸린다. 여기서는 `sleep(3000)` 를 사용해서 출력 시간을 가상으로 구현했다.
+
+출력을 완료하면 while문을 다시 반복한다.
+
+만약 `jobQueue` 가 비었다면 `continue` 를 사용해서 다시 while문을 반복한다. 이렇게 해서 `jobQueue` 에 출력할 내용이 들어올 때 까지 계속 확인한다.
+
+
+
+
+
+
+
+
+
+`main` 스레드: 사용자가 `q` 를 입력한다. `printer.work` 의 값을 `false` 로 변경한다.
+
+`main` 스레드는 while문을 빠져나가고 `main` 스레드가 종료된다.
+
+`printer` 스레드: while문에서 `work` 의 값이 `false` 인 것을 확인한다.
+
+`printer` 스레드는 while문을 빠져나가고, "프린터 종료"를 출력하고, `printer` 스레드는 종료된다.
+
+앞서 살펴보았듯이 이 방식의 문제는 종료( `q` )를 입력했을 때 바로 반응하지 않는다는 점이다. 
+
+왜냐하면 `printer` 스 레드가 반복문을 빠져나오려면 while문을 체크해야 하는데, `printer` 스레드가 `sleep(3000)` 을 통해 대기 상태에 빠져서 작동하지 않기 때문이다. 
+
+따라서 최악의 경우 `q` 를 입력하고 3초 이후에 프린터가 종료된다.
+
+이제 인터럽트를 사용해서 반응성이 느린 문제를 해결해 보자.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
