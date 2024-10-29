@@ -1174,6 +1174,346 @@ main` 스레드: 사용자의 입력을 받아서 `Printer` 인스턴스의 `job
 
 이제 인터럽트를 사용해서 반응성이 느린 문제를 해결해 보자.
 
+## 예제 2
+
+```java
+public class MyPrinterV2 {
+
+    public static void main(String[] args) {
+        Printer printer = new Printer();
+        Thread printThread = new Thread(printer, "printer");
+        printThread.start();
+
+        Scanner scanner = new Scanner(System.in);
+        while (true) {
+            log("프린터할 문서를 입력해: 종료(q): ");
+
+            String input = scanner.nextLine();
+
+            if(input.equals("q")) {
+               printer.work = false;
+               printThread.interrupt();
+               break;
+            }
+
+            printer.addJob(input);
+        }
+    }
+
+    static class Printer implements Runnable {
+        volatile boolean work = true;
+        Queue<String> jobQueue = new ConcurrentLinkedQueue<>();
+
+        @Override
+        public void run() {
+            while (work) {
+                if(jobQueue.isEmpty()) {
+                    continue;
+                }
+
+                try {
+                    String job = jobQueue.poll();
+                    log("출력 시작" + job + ", 대기 문서: " + jobQueue);
+                    Thread.sleep(3000);
+                    log("출력 완료");
+                } catch (InterruptedException e) {
+                    log("인터럽트");
+                    break;
+                }
+            }
+
+            log("프린터 종료");
+        }
+
+        public void addJob(String input) {
+            jobQueue.add(input);
+        }
+    }
+}
+```
+
+## 예제 3
+
+```java
+public class MyPrinterV3 {
+
+  public static void main(String[] args) {
+    Printer printer = new Printer();
+    Thread printThread = new Thread(printer, "printer");
+    printThread.start();
+
+    Scanner scanner = new Scanner(System.in);
+    while (true) {
+      log("프린터할 문서를 입력해: 종료(q): ");
+
+      String input = scanner.nextLine();
+
+      if(input.equals("q")) {
+        printThread.interrupt();
+        break;
+      }
+
+      printer.addJob(input);
+    }
+  }
+
+  static class Printer implements Runnable {
+    Queue<String> jobQueue = new ConcurrentLinkedQueue<>();
+
+    @Override
+    public void run() {
+      while (!Thread.interrupted()) {
+        if(jobQueue.isEmpty()) {
+          continue;
+        }
+
+        try {
+          String job = jobQueue.poll();
+          log("출력 시작" + job + ", 대기 문서: " + jobQueue);
+          Thread.sleep(3000);
+          log("출력 완료");
+        } catch (InterruptedException e) {
+          log("인터럽트");
+          break;
+        }
+      }
+
+      log("프린터 종료");
+    }
+
+    public void addJob(String input) {
+      jobQueue.add(input);
+    }
+  }
+}
+```
+
+## yield 양보하기
+
+어떤 스레드를 얼마나 실행할지는 운영체제가 스케줄링을 통해 결정한다. 
+
+그런데 특정 스레드가 크게 바쁘지 않은 상황 이어서 다른 스레드에 CPU 실행 기회를 양보하고 싶을 수 있다. 
+
+이렇게 양보하면 스케줄링 큐에 대기 중인 다른 스레드 가 CPU 실행 기회를 더 빨리 얻을 수 있다.
+
+```java
+public class YieldMain {
+
+  static final int THREAD_COUNT = 1000;
+
+  public static void main (String[] args) {
+    for(int i = 0 ; i < THREAD_COUNT ; i++) {
+      new Thread(new MyRunnable()).start();
+    }
+  }
+
+  static class MyRunnable implements Runnable {
+
+    @Override
+    public void run() {
+      for(int i = 0 ; i < 10 ; i++) {
+
+        System.out.println(Thread.currentThread().getName() + " - " + i);
+        // 1. 암것도 안하기
+        //sleep(1); // 2. sleep(1)
+        //Thread.yield(); // yield
+      }
+    }
+  }
+}
+```
+
+1000개의 스레드를 실행한다.
+
+각 스레드가 실행하는 로직은 아주 단순하다. 스레드당 0~9까지 출력하면 끝난다.
+
+`run()` 에 있는 1, 2, 3 주석을 변경하면서 실행해보자.
+
+여기서는 3가지 방식을 사용한다.
+
+1. `Empty` : `sleep(1)` , `yield()` 없이 호출한다. 운영체제의 스레드 스케줄링을 따른다.
+
+```shell
+Thread-3 - 0
+Thread-2 - 0
+Thread-2 - 1
+Thread-2 - 2
+Thread-2 - 3
+```
+
+특정 스레드가 쭉~ 수행된 다음에 다른 스레드가 수행되는 것을 확인할 수 있다.
+
+참고로 실행 환경에 따라 결과는 달라질 수 있다. 다른 예시보다 상대적으로 하나의 스레드가 쭉~ 연달아 실행되 다가 다른 스레드로 넘어간다.
+
+이 부분은 운영체제의 스케줄링 정책과 환경에 따라 다르지만 대략 0.01초(10ms)정도 하나의 스레드가 실행되고, 다른 스레드로 넘어간다.
+
+2. `sleep(1)` : 특정 스레드를 잠시 쉬게 한다.
+
+```shell
+Thread-750 - 9
+Thread-388 - 9
+Thread-547 - 9
+Thread-769 - 8
+Thread-805 - 5
+```
+
+`sleep(1)` 을사용해서스레드의상태를1밀리초동안아주잠깐 `RUNNABLE` `TIMED_WAITING` 으로변경 한다. 
+
+이렇게 되면 스레드는 CPU 자원을 사용하지 않고, 실행 스케줄링에서 잠시 제외된다. 
+
+1 밀리초의 대기 시 간이후다시 `TIMED_WAITING` `RUNNABLE` 상태가 되면서 실행 스케줄링에 포함된다.
+
+결과적으로 `TIMED_WAITING` 상태가 되면서 다른 스레드에 실행을 양보하게 된다. 
+
+그리고 스캐줄링 큐에 대기 중인 다른 스레드가 CPU의 실행 기회를 빨리 얻을 수 있다.
+
+하지만이방식은 `RUNNABLE` `TIMED_WAITING` `RUNNABLE` 로 변경되는 복잡한 과정을 거치고, 또 특정시간 만큼 스레드가 실행되지 않는 단점이 있다.
+
+예를 들어서 양보할 스레드가 없다면, 차라리 나의 스레드를 더 실행하는 것이 나은 선택일 수 있다. 
+
+이 방법은 나머지 스레드가 모두 대기 상태로 쉬고 있어도 내 스레드까지 잠깐 실행되지 않는 것이다. 
+
+쉽게 이야기해서 양보할 사람이 없는데 혼자서 양보한 이상한 상황이 될 수 있다.
+
+3. `yield()` : `yield()` 를 사용해서 다른 스레드에 실행을 양보한다.
+
+```shell
+Thread-868 - 8
+Thread-882 - 9
+Thread-940 - 9
+Thread-943 - 8
+Thread-868 - 9
+Thread-943 - 9
+```
+
+자바의 스레드가 `RUNNABLE` 상태일 때, 운영체제의 스케줄링은 다음과 같은 상태들을 가질 수 있다.
+
+**실행 상태(Running):** 스레드가 CPU에서 실제로 실행 중이다.
+
+**실행 대기 상태(Ready):** 스레드가 실행될 준비가 되었지만, CPU가 바빠서 스케줄링 큐에서 대기 중이다.
+
+운영체제는 실행 상태의 스레드들을 잠깐만 실행하고 실행 대기 상태로 만든다. 
+
+그리고 실행 대기 상태의 스레드들을 잠깐만 실행 상태로 변경해서 실행한다. 
+
+이 과정을 계속 반복한다. 참고로 자바에서는 두 상태를 구분할 수는 없다.
+
+그래서 이 두 개의 상태랄 합쳐 runnable 이라고 한다.
+
+**yield()의 작동**
+
+`Thread.yield()` 메서드는 현재 실행 중인 스레드가 자발적으로 CPU를 양보하여 다른 스레드가 실행될 수 있도록 한다.
+
+`yield()` 메서드를 호출한 스레드는 `RUNNABLE` 상태를 유지하면서 CPU를 양보한다. 
+
+즉, 이 스레드는 다시 스케줄링 큐에 들어가면서 다른 스레드에게 CPU 사용 기회를 넘긴다.
+
+자바에서 `Thread.yield()` 메서드를 호출하면 현재 실행 중인 스레드가 CPU를 양보하도록 힌트를 준다. 
+
+이는 스레 드가 자신에게 할당된 실행 시간을 포기하고 다른 스레드에게 실행 기회를 주도록 한다. 
+
+참고로 `yield()` 는 운영체제 의 스케줄러에게 단지 힌트를 제공할 뿐, 강제적인 실행 순서를 지정하지 않는다. 
+
+그리고 반드시 다른 스레드가 실행되는 것도 아니다.
+
+`yield()` 는 `RUNNABLE` 상태를 유지하기 때문에, 쉽게 이야기해서 양보할 사람이 없다면 본인 스레드가 계속 실행될 수 있다.
+
+참고로 최근에는 10코어 이상의 CPU도 많기 때문에 스레드 10개 정도만 만들어서 실행하면, 양보가 크게 의미가 없다. 
+
+양보해도 CPU 코어가 남기 때문에 양보하지 않고 계속 수행될 수 있다. 
+
+CPU 코어 수 이상의 스레드를 만들어야 양보하는 상황을 확인할 수 있다. 
+
+그래서 이번 예제에서 1000개의 스레드를 실행한 것이다.
+
+**참고**: `log()` 가 사용하는 기능은 현재 시간도 획득해야 하고, 날짜 포멧도 지정해야 하는 등 복잡하다. 
+
+이 사이에 스레드의 컨텍스트 스위칭이 발생하기 쉽다. 
+
+이런 이유로 스레드의 실행 순서를 일정하게 출력하기 어렵다. 
+
+그래서 여기서는 단순한 `System.out.println()` 을 사용했다.
+
+## 예제 4
+
+```java
+public class MyPrinterV4 {
+
+  public static void main(String[] args) {
+    Printer printer = new Printer();
+    Thread printThread = new Thread(printer, "printer");
+    printThread.start();
+
+    Scanner scanner = new Scanner(System.in);
+    while (true) {
+      log("프린터할 문서를 입력해: 종료(q): ");
+
+      String input = scanner.nextLine();
+
+      if(input.equals("q")) {
+        printThread.interrupt();
+        break;
+      }
+
+      printer.addJob(input);
+    }
+  }
+
+  static class Printer implements Runnable {
+    Queue<String> jobQueue = new ConcurrentLinkedQueue<>();
+
+    @Override
+    public void run() {
+      while (!Thread.interrupted()) {
+        if(jobQueue.isEmpty()) {
+          Thread.yield();
+          continue;
+        }
+
+        try {
+          String job = jobQueue.poll();
+          log("출력 시작" + job + ", 대기 문서: " + jobQueue);
+          Thread.sleep(3000);
+          log("출력 완료");
+        } catch (InterruptedException e) {
+          log("인터럽트");
+          break;
+        }
+      }
+
+      log("프린터 종료");
+    }
+
+    public void addJob(String input) {
+      jobQueue.add(input);
+    }
+  }
+}
+```
+
+현재 작동하는 스레드가 아주 많다고 가정해보자.
+
+인터럽트도 걸리지 않고, `jobQueue` 도 비어있는데, 이런 체크 로직에 CPU 자원을 많이 사용하게 되면, 정작 필요한 스레드들의 효율이 상대적으로 떨어질 수 있다.
+
+차라리 그 시간에 다른 스레드들을 더 많이 실행해서 `jobQueue` 에 필요한 작업을 빠르게 만들어 넣어주는게 더 효율적일 것이다.
+
+그래서 다음과 같이 `jobQueue` 에 작업이 비어있으면 `yield()` 를 호출해서, 다른 스레드에 작업을 양보하는게 전체 관점에서 보면 더 효율적이다.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
