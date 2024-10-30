@@ -3,8 +3,7 @@ package thread.control.printer;
 import java.util.Queue;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import static thread.util.MyLogger.log;
-import static thread.util.ThreadUtils.sleep;
+import static util.MyLogger.log;
 
 public class MyPrinterV2 {
 

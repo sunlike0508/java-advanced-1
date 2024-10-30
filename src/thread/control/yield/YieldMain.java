@@ -1,8 +1,5 @@
 package thread.control.yield;
 
-import thread.start.HelloRunnable;
-import static thread.util.ThreadUtils.sleep;
-
 public class YieldMain {
 
     static final int THREAD_COUNT = 1000;

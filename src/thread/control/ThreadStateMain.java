@@ -1,7 +1,6 @@
 package thread.control;
 
-import thread.start.HelloThread;
-import static thread.util.MyLogger.log;
+import static util.MyLogger.log;
 
 public class ThreadStateMain {
 
