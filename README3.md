@@ -84,7 +84,7 @@ public class VolatileFlagMain {
 
 물론 CPU 코어가 1개라면 빠르게 번갈아 가면서 실행될 수 있다.
 
-
+<img width="596" alt="Screenshot 2024-10-30 at 23 27 48" src="https://github.com/user-attachments/assets/b075f95d-5902-4b96-8d5b-077e584999e8">
 
 점선 위쪽은 스레드의 실행 흐름을 나타내고, 점선 아래쪽은 하드웨어를 나타낸다.
 
@@ -96,8 +96,7 @@ public class VolatileFlagMain {
 
 `work` 스레드의 경우 `while(runFlag[true])` 가 만족하기 때문에 while문을 계속 반복해서 수행한다.
 
-
-
+<img width="668" alt="Screenshot 2024-10-30 at 23 29 54" src="https://github.com/user-attachments/assets/8a8a4130-a6ed-4141-89c2-09bf7bafcd09">
 
 `main` 스레드는 `runFlag` 값을 `false` 로 설정한다.
 
@@ -113,6 +112,7 @@ public class VolatileFlagMain {
 
 CPU는 처리 성능을 개선하기 위해 중간에 캐시 메모리라는 것을 사용한다.
 
+<img width="472" alt="Screenshot 2024-10-30 at 23 30 53" src="https://github.com/user-attachments/assets/b8c5c8bc-8aaf-4db7-941c-796fe2762a57">
 
 메인 메모리는 CPU 입장에서 보면 거리도 멀고, 속도도 상대적으로 느리다. 
 
@@ -128,7 +128,7 @@ CPU 연산은 매우 빠르기 때문에 CPU 연산의 빠른 성능을 따라�
 
 참고로 여러 코어가 공유하는 캐시 메모리도 있다.
 
-
+<img width="463" alt="Screenshot 2024-10-30 at 23 31 37" src="https://github.com/user-attachments/assets/fb5f158a-33f5-4f93-8658-682a9e282306">
 
 각 스레드가 `runFlag` 의 값을 사용하면 CPU는 이 값을 효율적으로 처리하기 위해 먼저 `runFlag` 를 캐시 메 모리에 불러온다.
 
