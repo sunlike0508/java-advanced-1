@@ -36,7 +36,7 @@ public class VolatileFlagMain {
 
 ```
 
-
+<img width="683" alt="Screenshot 2024-10-30 at 23 09 21" src="https://github.com/user-attachments/assets/d4fbf105-7c7d-444b-99d3-b16e3064eefa">
 
 `main` 스레드, `work` 스레드 모두 `MyTask` 인스턴스( `x001` )에 있는 `runFlag` 를 사용한다. 
 
@@ -78,8 +78,7 @@ public class VolatileFlagMain {
 
 **일반적으로 생각하는 메모리 접근 방식**
 
-
-
+<img width="476" alt="Screenshot 2024-10-30 at 23 12 07" src="https://github.com/user-attachments/assets/3e7433ae-fc25-4574-960b-076eec97663d">
 
 `main` 스레드와 `work` 스레드는 각각의 CPU 코어에 할당되어서 실행된다. 
 
