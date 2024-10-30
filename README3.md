@@ -70,7 +70,9 @@ public class VolatileFlagMain {
 
 `work` 스레드는 while문을 빠 져나오고 task 종료를 출력해야 한다! 도대체 어떻게 된 일일까?
 
-## volatile, 메모리 가시성2 메모리 가시성 문제
+## volatile, 메모리 가시성2 
+
+### 메모리 가시성 문제
 
 멀티스레드는 이미 여러 스레드가 작동해서 안 그래도 이해하기 어려운데, 거기에 한술 더하는 문제가 있으니, 바로 메모리 가시성(memory visibility)문제이다. 
 
