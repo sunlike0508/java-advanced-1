@@ -152,7 +152,7 @@ CPU는 이 값을 효율적으로 처리하기 위해 먼저 캐시 메모리에
 
 `work` 스레드의 경우 `while(runFlag[true])` 가 만족하기 때문에 while문을 계속 반복해서 수행한다.
 
-<img width="642" alt="Screenshot 2024-10-30 at 23 38 55" src="https://github.com/user-attachments/assets/d0acd3e9-5898-44e3-84e6-2e22a9248017">
+<img width="576" alt="Screenshot 2024-10-30 at 23 51 24" src="https://github.com/user-attachments/assets/161963a3-5bc4-40d1-b7f6-2ea39828b3cd">
 
 `main` 스레드는 `runFlag` 를 `false` 로 설정한다.
 
@@ -166,6 +166,7 @@ CPU는 이 값을 효율적으로 처리하기 위해 먼저 캐시 메모리에
 
 `work` 스레드의 경우 `while(runFlag[true])` 가 만족하기 때문에 while문을 계속 반복해서 수행한다.
 
+<img width="642" alt="Screenshot 2024-10-30 at 23 38 55" src="https://github.com/user-attachments/assets/d0acd3e9-5898-44e3-84e6-2e22a9248017">
 
 캐시 메모리에 있는 `runFlag` 의 값이 언제 메인 메모리에 반영될까?
 
