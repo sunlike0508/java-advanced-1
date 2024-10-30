@@ -134,7 +134,7 @@ CPU 연산은 매우 빠르기 때문에 CPU 연산의 빠른 성능을 따라�
 
 그리고 이후에는 캐시 메모리에 있는 `runFlag` 를 사용하게 된다.
 
-
+<img width="652" alt="Screenshot 2024-10-30 at 23 38 30" src="https://github.com/user-attachments/assets/4501c906-04d4-4fc6-8af7-955cae036812">
 
 점선 위쪽은 스레드의 실행 흐름을 나타내고, 점선 아래쪽은 하드웨어를 나타낸다.
 
@@ -150,8 +150,7 @@ CPU는 이 값을 효율적으로 처리하기 위해 먼저 캐시 메모리에
 
 `work` 스레드의 경우 `while(runFlag[true])` 가 만족하기 때문에 while문을 계속 반복해서 수행한다.
 
-
-
+<img width="642" alt="Screenshot 2024-10-30 at 23 38 55" src="https://github.com/user-attachments/assets/d0acd3e9-5898-44e3-84e6-2e22a9248017">
 
 `main` 스레드는 `runFlag` 를 `false` 로 설정한다.
 
@@ -174,8 +173,7 @@ CPU는 이 값을 효율적으로 처리하기 위해 먼저 캐시 메모리에
 
 메인 메모리에 반영된 `runFlag` 값을 `work` 스레드가 사용하는 캐시 메모리에 다시 불러와야 한다.
 
-
-
+<img width="544" alt="Screenshot 2024-10-30 at 23 39 27" src="https://github.com/user-attachments/assets/fb7a24cc-13d2-45ab-8535-dac62f2a22f6">
 
 메인 메모리에 변경된 `runFlag` 값이 언제 CPU 코어2의 캐시 메모리에 반영될까?
 
