@@ -136,7 +136,7 @@ CPU 연산은 매우 빠르기 때문에 CPU 연산의 빠른 성능을 따라�
 
 그리고 이후에는 캐시 메모리에 있는 `runFlag` 를 사용하게 된다.
 
-<img width="652" alt="Screenshot 2024-10-30 at 23 38 30" src="https://github.com/user-attachments/assets/4501c906-04d4-4fc6-8af7-955cae036812">
+<img width="496" alt="Screenshot 2024-10-30 at 23 45 30" src="https://github.com/user-attachments/assets/135bc65f-29ad-42cb-ae95-d6a95d37be7d">
 
 점선 위쪽은 스레드의 실행 흐름을 나타내고, 점선 아래쪽은 하드웨어를 나타낸다.
 
