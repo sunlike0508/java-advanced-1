@@ -204,4 +204,76 @@ CPU는 이 값을 효율적으로 처리하기 위해 먼저 캐시 메모리에
 
 그렇다면 한 스레드에서 변경한 값이 다른 스레드에서 즉시 보이게 하려면 어떻게 해야할까?
 
+## volatile, 메모리 가시성3
+
+캐시 메모리를 사용하면 CPU 처리 성능을 개선할 수 있다. 
+
+하지만 때로는 이런 성능 향상보다는, 여러 스레드에서 같은 시점에 정확히 같은 데이터를 보는 것이 더 중요할 수 있다.
+
+해결방안은 아주 단순하다 성능을 약간 포기하는 대신에, 값을 읽을 때, 값을 쓸 때 모두 메인 메모리에 직접 접근하면 된다.
+
+자바에서는 `volatile` 이라는 키워드로 이런 기능을 제공한다.
+
+```java
+public class VolatileFlagMain {
+
+    public static void main(String[] args) {
+        MyTask myTask = new MyTask();
+        Thread t1 = new Thread(myTask, "work");
+        log("runFlag = " + myTask.runFlag);
+        t1.start();
+
+        sleep(1000);
+        log("runFlag를 false");
+        myTask.runFlag = false;
+        log("runFlag = " + myTask.runFlag);
+        log("main 종료");
+    }
+
+    static class MyTask implements Runnable {
+
+        //boolean runFlag = true;
+        volatile boolean runFlag = false;
+
+        @Override
+        public void run() {
+            log("task 시작");
+            while(runFlag) {
+
+            }
+            log("task 종료");
+        }
+    }
+}
+```
+
+실행 결과를 보면 `runFlag` 를 `false` 로 변경하자마자 `"task 종료"` 가 출력되는 것을 확인할 수 있다. 
+
+그리고 모든 스레드가 정상 종료되기 때문에 자바 프로그램도 종료된다.
+
+여러 스레드에서 같은 값을 읽고 써야 한다면 `volatile` 키워드를 사용하면 된다. 
+
+단 캐시 메모리를 사용할 때 보다 성능이 느려지는 단점이 있기 때문에 꼭! 필요한 곳에만 사용하는 것이 좋다.
+
+## volatile, 메모리 가시성4
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
