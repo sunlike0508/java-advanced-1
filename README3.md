@@ -251,6 +251,8 @@ public class VolatileFlagMain {
 
 그리고 모든 스레드가 정상 종료되기 때문에 자바 프로그램도 종료된다.
 
+<img width="680" alt="Screenshot 2024-10-31 at 22 55 05" src="https://github.com/user-attachments/assets/6cbf82cd-af98-4f8e-bd1e-9799aa25d001">
+
 여러 스레드에서 같은 값을 읽고 써야 한다면 `volatile` 키워드를 사용하면 된다. 
 
 단 캐시 메모리를 사용할 때 보다 성능이 느려지는 단점이 있기 때문에 꼭! 필요한 곳에만 사용하는 것이 좋다.
