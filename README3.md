@@ -259,21 +259,241 @@ public class VolatileFlagMain {
 
 ## volatile, 메모리 가시성4
 
+```java
+public class VolatileCountMain {
 
+    public static void main(String[] args) {
+        MyTask task = new MyTask();
 
+        Thread thread = new Thread(task, "work");
+        thread.start();
 
+        sleep(1000);
+        task.flag = false;
 
+        log("flag = " + task.flag + " , count = " + task.count + " in main");
+    }
 
+    static class MyTask implements Runnable {
+        boolean flag = true;
+        long count;
 
+        //volatile  boolean flag = true;
+        //volatile long count;
 
+        @Override
+        public void run() {
 
+            while(flag) {
+                count++;
 
+                if(count % 100_000_000 == 0) {
+                    log("flag = " + flag + " , count = " + count + " in while()");
+                }
+            }
 
+            log("flag = " + flag + " , count = " + count + " 종료");
+        }
+    }
+}
+```
 
+```shell
+23:05:55.252 [     work] flag = true , count = 100000000 in while()
+23:05:55.360 [     work] flag = true , count = 200000000 in while()
+23:05:55.464 [     work] flag = true , count = 300000000 in while()
+23:05:55.564 [     work] flag = true , count = 400000000 in while()
+23:05:55.661 [     work] flag = true , count = 500000000 in while()
+23:05:55.757 [     work] flag = true , count = 600000000 in while()
+23:05:55.854 [     work] flag = true , count = 700000000 in while()
+23:05:55.951 [     work] flag = true , count = 800000000 in while()
+23:05:56.048 [     work] flag = true , count = 900000000 in while()
+23:05:56.145 [     work] flag = true , count = 1000000000 in while()
+23:05:56.148 [     main] flag = false , count = 1003017376 in main
+23:05:56.241 [     work] flag = true , count = 1100000000 in while()
+23:05:56.241 [     work] flag = false , count = 1100000000 종료
+```
+`main` 스레드가 `flag` 를 `false` 로 변경하는 시점에 `count` 값은 `1003017376` 이다. 
 
+`work` 스레드가 이후에 `flag` 를 확인하지만 아직 `flag = true` 이다.
 
+`work` 스레드가 사용하는 캐시 메모리에서 읽은 것이다.
 
+`work` 스레드는 반복문을 계속 실행하면서 `count` 값을 증가시킨다.
 
+`work` 스레드는 이후에 `count` 값이 `1100000000` 이 되었을 때 `flag` 가 `false` 로 변한 것을 확인할 수 있다.
+
+이 시점에 `work` 스레드가 사용하는 캐시 메모리의 `flag` 값이 `false` 로 변경되었다.
+
+(물론 false로 변경되는 시점이 랜덤임)
+
+### 시점의 차이
+
+`main` 스레드가 `flag` 를 `false` 로 변경한 시점에 `count` 값은 `1003017376` 이다. 
+
+`work` 스레드가 `flag` 값을 `false` 로 확인한 시점에 `count` 값은 `1100000000` 이다.
+
+결과적으로 `main` 스레드가 `flag` 값을 `false` 로 변경하고 한참이 지나서야 `work` 스레드는 `flag` 값이 `false` 로 변경된 것을 확인한 것이다.
+
+**메모리 가시성(memory visibility)**
+
+캐시 메모리를 메인 메모리에 반영하거나, 메인 메모리의 변경 내역을 캐시 메모리에 다시 불러오는 것은 언제 발생할까?
+
+이 부분은 CPU 설계 방식과 실행 환경에 따라 다를 수 있다. 
+
+즉시 반영될 수도 있고, 몇 밀리초 후에 될 수도 있고, 몇 초 후에 될 수도 있고, 평생 반영되지 않을 수도 있다.
+
+주로 컨텍스트 스위칭이 될 때, 캐시 메모리도 함께 갱신되는데, 이 부분도 환경에 따라 달라질 수 있다.
+
+`Thread.sleep()` , 콘솔에 출력등을 할 때 스레드가 잠시 쉬는데, 이럴 때 컨텍스트 스위칭이 되면서 주로 갱신 된다. 
+
+하지만 이것이 갱신을 보장하는 것은 아니다.
+
+여기서 정확히 11억에서 변경된 `flag` 값을 읽을 수 있었던 이유는 11억에서 콘솔에 결과를 출력하기 때문이다. 
+
+콘솔에 결과를 출력하면, 출력하는 동안 스레드가 잠시 대기하며 쉬는데, 이럴 때 컨택스트 스위칭이 발생하면서 캐시 메모 리의 값이 갱신된다. 
+
+참고로 이 부분은 주로 그렇다는 것이지 확실하게 캐시의 갱신을 보장하지는 않는다. 
+
+따라서 환경에 따라 결과가 달라질 수 있다.
+
+결국 이 상황에서 메모리 가시성 문제를 확실하게 해결하려면 `volatile` 키워드를 사용해야 한다.
+
+```java
+volatile  boolean flag = true;
+volatile long count;
+```
+
+```shell
+23:09:41.982 [     work] flag = true , count = 100000000 in while()
+23:09:42.166 [     main] flag = false , count = 123382212 in main
+23:09:42.166 [     work] flag = false , count = 222297705 종료
+10:54:11.606 [     main] flag = false, count = 222297705 in main
+```
+
+(내 컴퓨터는 일단 실행결과가 너무 달라서 강의 그대로 씀)
+
+`main` 스레드가 `flag` 를 `false` 로 변경하는 시점에 `count` 값은 `222297705` 이다. 
+
+`work` 스레드가 `flag` 를 `false` 로 확인하는 시점에 `count` 값은 `222297705` 이다.
+
+실행 결과를 보면 2가지 사실을 확인할 수 있다.
+
+`main` 스레드가 `flag` 를 변경하는 시점에 `work` 스레드도 `flag` 의 변경 값을 정확하게 확인할 수 있다. 
+
+`volatile` 을 적용하면 캐시 메모리가 아니라 메인 메모리에 항상 직접 접근하기 때문에 성능이 상대적으로 떨어진다.
+
+`volatile` 이 없을 때: `1176711196` , 약 11억(정확한 숫자는 아니고 대략적인 수치다) 
+
+`volatile` 이 있을 때: `222297705` , 약 2.2억
+
+둘을 비교해보면 물리적으로 약 5배의 성능 차이를 확인할 수 있다. 성능은 환경에 따라 차이가 있다.
+
+## 자바 메모리 모델(Java Memory Model)
+
+### 메모리 가시성(memory visibility)
+
+멀티스레드 환경에서 한 스레드가 변경한 값이 다른 스레드에서 언제 보이는지에 대한 것을 메모리 가시성(memory visibility)이라 한다. 
+
+이름 그대로 메모리에 변경한 값이 보이는가, 보이지 않는가의 문제이다.
+
+### **Java Memory Model**
+
+Java Memory Model(JMM)은 자바 프로그램이 어떻게 메모리에 접근하고 수정할 수 있는지를 규정하며, 특히 멀티 스레드 프로그래밍에서 스레드 간의 상호작용을 정의한다.
+
+JMM에 여러가지 내용이 있지만, 핵심은 여러 스레드들의 작업 순서를 보장하는 happens-before 관계에 대한 정의다.
+
+### **happens-before**
+
+happens-before 관계는 자바 메모리 모델에서 스레드 간의 작업 순서를 정의하는 개념이다. 
+
+만약 A 작업이 B 작업보 다 happens-before 관계에 있다면, A 작업에서의 모든 메모리 변경 사항은 B 작업에서 볼 수 있다. 
+
+즉, A 작업에서 변경된 내용은 B 작업이 시작되기 전에 모두 메모리에 반영된다.
+
+(내가 volatile 변수 값을 바꾸니까 쓰레드의 작업이 바로 적용된다 라는 말)
+
+happens-before 관계는 이름 그대로, 한 동작이 다른 동작보다 먼저 발생함을 보장한다. 
+
+happens-before 관계는 스레드 간의 메모리 가시성을 보장하는 규칙이다. 
+
+happens-before 관계가 성립하면, 한 스레드의 작업을 다른 스레드에서 볼 수 있게 된다. 
+
+즉, 한 스레드에서 수행한 작업을 다른 스레드가 참조할 때 최신 상태가 보장되는 것이다.
+
+이 규칙을 따르면 프로그래머가 멀티스레드 프로그램을 작성할 때 예상치 못한 동작을 피할 수 있다.
+
+### **happens-before 관계가 발생하는 경우**
+
+이런 부분은 외우는 것이 아니라, 이런 것이 있다 정도로 읽고 넘어가면 된다. 
+
+몇몇 규칙은 아직 학습하지 않은 기능이지만, 강의가 끝나고 나면 자연스럽게 이해가 될 것이다.
+
+### **프로그램 순서 규칙**
+
+단일 스레드 내에서, 프로그램의 순서대로 작성된 모든 명령문은 happens-before 순서로 실행된다. 
+
+예를 들어, `int a = 1; int b = 2;` 에서 `a = 1` 은 `b = 2` 보다 먼저 실행된다.
+
+### **volatile 변수 규칙**
+
+한 스레드에서 `volatile` 변수에 대한 쓰기 작업은 해당 변수를 읽는 모든 스레드에 보이도록 한다. 
+
+즉, `volatile` 변수에 대한 쓰기 작업은 그 변수를 읽는 작업보다 happens-before 관계를 형성한다.
+
+### **스레드 시작 규칙**
+
+한 스레드에서 `Thread.start()` 를 호출하면, 해당 스레드 내의 모든 작업은 `start()` 호출 이후에 실행된 작업보다 happens-before 관계가 성립한다.
+```java
+Thread t = new Thread(task);
+t.start();
+```
+
+여기에서 `start()` 호출 전에 수행된 모든 작업은 새로운 스레드가 시작된 후의 작업보다 happens-before 관계를 가진다.
+
+### **스레드 종료 규칙**
+
+한 스레드에서 `Thread.join()` 을 호출하면, join 대상 스레드의 모든 작업은 `join()` 이 반환된 후의 작업보다 happens-before 관계를 가진다. 
+
+예를 들어, `thread.join()` 호출 전에 `thread` 의 모든 작업이 완료되어야 하며, 이 작업은 `join()` 이 반환된 후에 참조 가능하다. 
+
+`1 ~ 100` 까지 값을 더하는 `sumTask` 예시를 떠올려보자.
+
+### **인터럽트 규칙**
+
+한 스레드에서 `Thread.interrupt()` 를 호출하는 작업이, 인터럽트된 스레드가 인터럽트를 감지하는 시점의 작업 보다 happens-before 관계가 성립한다. 
+
+즉, `interrupt()` 호출 후, 해당 스레드의 인터럽트 상태를 확인하는 작업 이 happens-before 관계에 있다. 
+
+만약 이런 규칙이 없다면 인터럽트를 걸어도, 한참 나중에 인터럽트가 발생할 수 있다.
+
+### **객체 생성 규칙**
+
+객체의 생성자는 객체가 완전히 생성된 후에만 다른 스레드에 의해 참조될 수 있도록 보장한다. 
+
+즉, 객체의 생성자에서 초기화된 필드는 생성자가 완료된 후 다른 스레드에서 참조될 때 happens-before 관계가 성립한다.
+
+### **모니터 락 규칙**
+
+한 스레드에서 `synchronized` 블록을 종료한 후, 그 모니터 락을 얻는 모든 스레드는 해당 블록 내의 모든 작업을 볼 수 있다. 
+
+예를 들어, `synchronized(lock) { ... }` 블록 내에서의 작업은 블록을 나가는 시점에 happens- before 관계가 형성된다. 
+
+뿐만 아니라 `ReentrantLock` 과 같이 락을 사용하는 경우에도 happens-before 관계가 성립한다.
+
+참고로 `synchronized` 와 `ReentrantLock` 은 바로 뒤에서 다룬다.
+
+### **전이 규칙 (Transitivity Rule)**
+
+만약 A가 B보다 happens-before 관계에 있고, B가 C보다 happens-before 관계에 있다면, A는 C보다 happens- before 관계에 있다.
+
+**정리**
+
+스레드의 생성과 종료, 인터럽트 등은 스레드의 상태를 변경하기 때문에 어찌보면 당연하다.
+
+그래서 쉽게 한 줄로 이야기하면 다음과 같이 정리할 수 있다.
+
+**volatile 또는 스레드 동기화 기법(synchronized, ReentrantLock)을 사용하면 메모리 가시성의 문제가 발생하지 않는다.**
 
 
 
