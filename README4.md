@@ -82,6 +82,9 @@ public class BankAccountV1 implements BankAccount {
 }
 ```
 
+
+<img width="699" alt="Screenshot 2024-11-02 at 15 54 29" src="https://github.com/user-attachments/assets/219d248e-06cb-49ca-adf0-e762fa974ef2">
+
 각각의 스레드의 스택에서 `run()` 이 실행된다.
 
 `t1` 스레드는 `WithdrawTask(x002)` 인스턴스의 `run()` 을 호출한다.
@@ -94,8 +97,7 @@ public class BankAccountV1 implements BankAccount {
 
 **참고**: 그림에서는 편의상 `BankAccountV1` 대신에 `BankAccount` 라고 표현하겠다.
 
-
-
+<img width="687" alt="Screenshot 2024-11-02 at 15 55 00" src="https://github.com/user-attachments/assets/2fc60808-f39b-4b12-a81b-3537f0d53a48">
 
 `t1` 스레드의 `run()` 에서 `withdraw()` 를 실행한다.
 
