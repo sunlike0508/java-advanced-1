@@ -438,6 +438,7 @@ public class BankAccountV2 implements BankAccount {
 
 참고로 실행 결과를 보면 `t2` 가 `BLOCKED` 상태인데, 이 상태도 확인해보자.
 
+<img width="699" alt="Screenshot 2024-11-02 at 16 51 55" src="https://github.com/user-attachments/assets/ffd7d061-b712-4767-850b-5b78ecab24f2">
 
 
 **모든 객체(인스턴스)는 내부에 자신만의 락( `lock` )을 가지고 있다.** 모니터 락(monitor lock)이라도고 부른다.
@@ -450,17 +451,25 @@ public class BankAccountV2 implements BankAccount {
 
 스레드 `t1` , `t2` 는 `withdraw()` 를 실행하기 직전이다.
 
+<img width="705" alt="Screenshot 2024-11-02 at 16 52 12" src="https://github.com/user-attachments/assets/e5a30646-b1f4-4c76-9c59-b97b48d03c2d">
 
 
 
+<img width="699" alt="Screenshot 2024-11-02 at 16 52 16" src="https://github.com/user-attachments/assets/077ea4ae-5955-4f03-953e-5a7eda2d7fe1">
+
+<img width="699" alt="Screenshot 2024-11-02 at 16 52 24" src="https://github.com/user-attachments/assets/d442cb4e-c3aa-4878-80e6-7735cf5fa2ab">
 
 
+<img width="706" alt="Screenshot 2024-11-02 at 16 52 30" src="https://github.com/user-attachments/assets/5111bed1-2bbd-47d5-b213-5586af7ed534">
 
 
+<img width="697" alt="Screenshot 2024-11-02 at 16 52 35" src="https://github.com/user-attachments/assets/2fcbfeab-073f-4a17-b460-55d453aefda4">
+
+<img width="695" alt="Screenshot 2024-11-02 at 16 52 40" src="https://github.com/user-attachments/assets/c87e614c-5ffc-4dab-9173-43c9a9d2153c">
 
 
+<img width="698" alt="Screenshot 2024-11-02 at 16 52 44" src="https://github.com/user-attachments/assets/0a762498-658c-4470-9063-034dcf3d40d1">
 
-
-
+<img width="693" alt="Screenshot 2024-11-02 at 16 52 48" src="https://github.com/user-attachments/assets/bc756667-3de9-4046-842c-1c8d4e977cfb">
 
 
