@@ -45,6 +45,7 @@ public class WithdrawTask implements Runnable {
 public class BankAccountV1 implements BankAccount {
 
     private int balance;
+    //volatile private int balance;
 
     public BankAccountV1(int initialBalance) {
         this.balance = initialBalance;
@@ -129,11 +130,40 @@ public class BankAccountV1 implements BankAccount {
 **참고**: 실행환경에 따라서 t1, t2가 동시에 실행될 수도 있다. 이 경우 출금액은 같고, 잔액은 200원이 된다. 이 부분은 바로 뒤에서 설명한다. (내가 그럼)
 
 
+### **동시성 문제**
 
+이 시나리오는 악의적인 사용자가 2대의 PC에서 동시에 같은 계좌의 돈을 출금한다고 가정한다.
 
+`t1` , `t2` , 스레드는 거의 동시에 실행되지만, 아주 약간의 차이로 `t1` 스레드가 먼저 실행되고, `t2` 스레드가 그 다음에 실행된다고 가정하겠다.
 
+처음 계좌의 잔액은 1000원이다. `t1` 스레드가 800원을 출금하면 잔액는 200원이 남는다.
 
+이제 계좌의 잔액은 200원이다. `t2` 스레드가 800원을 출금하면 잔액보다 더 많은 돈을 출금하게 되므로 출금에 실패해야 한다.
 
+그런데 실행 결과를 보면 기대와는 다르게 `t1` , `t2` 는 각각 800원씩 총 1600원 출금에 성공한다.
+
+계좌의 잔액는 `-600` 원이 되어있고, 계좌는 예상치 못하게 마이너스 금액이 되어버렸다.
+
+악의적인 사용자는 2대의 PC를 통해 자신의 계좌에 있는 1000원 보다 더 많은 금액인 1600원 출금에 성공한다. 
+
+분명히 계좌를 출금할 때 잔고를 체크하는 로직이 있는데도 불구하고, 왜 이런 문제가 발생했을까?
+
+**계좌 출금시 잔고 체크 로직** 
+
+```java
+if (balance < amount) {
+    log("[검증 실패] 출금액: " + amount + ", 잔액: " + balance);
+    return false;
+}
+```
+
+**참고**: `balance` 값에 `volatile` 을 도입하면 문제가 해결되지 않을까? 그렇지 않다. 
+
+`volatile` 은 한 스레드가 값을 변경했을 때 다른 스레드에서 변경된 값을 즉시 볼 수 있게 하는 메모리 가시성의 문제를 해결할 뿐이다. 
+
+예를 들어 `t1` 스레드가 `balance` 의 값을 변경했을 때, `t2` 스레드에서 `balance` 의 변경된 값을 즉시 확인해도 여전히 같은 문제가 발생한다. 
+
+이 문제는 메모리 가시성 문제를 해결해도 여전히 발생한다.
 
 
 
