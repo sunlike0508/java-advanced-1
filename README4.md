@@ -440,8 +440,9 @@ public class BankAccountV2 implements BankAccount {
 
 <img width="699" alt="Screenshot 2024-11-02 at 16 51 55" src="https://github.com/user-attachments/assets/ffd7d061-b712-4767-850b-5b78ecab24f2">
 
+**모든 객체(인스턴스)는 내부에 자신만의 락( `lock` )을 가지고 있다.** 
 
-**모든 객체(인스턴스)는 내부에 자신만의 락( `lock` )을 가지고 있다.** 모니터 락(monitor lock)이라도고 부른다.
+모니터 락(monitor lock)이라도고 부른다.
 
 객체 내부에 있고 우리가 확인하기는 어렵다.
 
@@ -453,23 +454,125 @@ public class BankAccountV2 implements BankAccount {
 
 <img width="705" alt="Screenshot 2024-11-02 at 16 52 12" src="https://github.com/user-attachments/assets/e5a30646-b1f4-4c76-9c59-b97b48d03c2d">
 
+`t1` 이 먼저 실행된다고 가정하겠다.
 
+스레드 `t1` 이 먼저 `synchronized` 키워드가 있는 `withdraw()` 메서드를 호출한다.
+
+`synchronized` 메서드를 호출하려면 먼저 해당 인스턴스의 락이 필요하다.
+
+락이 있으므로 스레드 `t1` 은 `BankAccount(x001)` 인스턴스에 있는 락을 획득한다.
 
 <img width="699" alt="Screenshot 2024-11-02 at 16 52 16" src="https://github.com/user-attachments/assets/077ea4ae-5955-4f03-953e-5a7eda2d7fe1">
 
+스레드 `t1` 은 해당 인스턴스의 락을 획득했기 때문에 `withdraw()` 메서드에 진입할 수 있다.
+
+스레드 `t2` 도 `withdraw()` 메서드 호출을 시도한다. 
+
+`synchronized` 메서드를 호출하려면 먼저 해당 인스턴 스의 락이 필요하다.
+
+스레드 `t2` 는 `BankAccount(x001)` 인스턴스에 있는 락 획득을 시도한다. 
+
+하지만 락이 없다. 이렇게 락이 없으면 `t2` 스레드는 락을 획득할 때 까지 `BLOCKED` 상태로 대기한다.
+
+`t2` 스레드의 상태는 `RUNNABLE` `BLOCKED` 상태로 변하고, 락을 획득할 때 까지 무한정 대기한다. 
+
+참고로 `BLOCKED` 상태가 되면 락을 다시 획득하기 전까지는 계속 대기하고, CPU 실행 스케줄링에 들어가지 않는다.
+
 <img width="699" alt="Screenshot 2024-11-02 at 16 52 24" src="https://github.com/user-attachments/assets/d442cb4e-c3aa-4878-80e6-7735cf5fa2ab">
 
+`t1` : 출금을 위한 검증 로직을 수행한다. 
+
+조건을 만족하므로 검증 로직을 통과한다. 
+
+잔액[1000]이 출금액[800] 보다 많으므로 통과한다.
 
 <img width="706" alt="Screenshot 2024-11-02 at 16 52 30" src="https://github.com/user-attachments/assets/5111bed1-2bbd-47d5-b213-5586af7ed534">
 
+`t1` : 잔액 1000원에서 800원을 출금하고 계산 결과인 200원을 잔액( `balance` )에 반영한다.
 
 <img width="697" alt="Screenshot 2024-11-02 at 16 52 35" src="https://github.com/user-attachments/assets/2fcbfeab-073f-4a17-b460-55d453aefda4">
 
+`t1` : 메서드 호출이 끝나면 락을 반납한다.
+
 <img width="695" alt="Screenshot 2024-11-02 at 16 52 40" src="https://github.com/user-attachments/assets/c87e614c-5ffc-4dab-9173-43c9a9d2153c">
 
+`t2` : 인스턴스에 락이 반납되면 **락 획득을 대기하는 스레드는 자동으로 락을 획득**한다. 
+
+이때 락을 획득한 스레드는 `BLOCKED` `RUNNABLE` 상태가 되고, 다시 코드를 실행한다.
 
 <img width="698" alt="Screenshot 2024-11-02 at 16 52 44" src="https://github.com/user-attachments/assets/0a762498-658c-4470-9063-034dcf3d40d1">
 
+스레드 `t2` 는 해당 인스턴스의 락을 획득했기 때문에 `withdraw()` 메서드에 진입할 수 있다. 
+`t2` : 출금을 위한 검증 로직을 수행한다. 
+
+조건을 만족하지 않으므로 `false` 를 반환한다.
+
+이때 잔액( `balance` )은 200원이다. 800원을 출금해야 하므로 조건을 만족하지 않는다.
+
 <img width="693" alt="Screenshot 2024-11-02 at 16 52 48" src="https://github.com/user-attachments/assets/bc756667-3de9-4046-842c-1c8d4e977cfb">
+
+`t2` : 락을 반납하면서 `return` 한다.
+
+**결과**
+
+`t1` : 800원 출금 완료
+
+`t2` : 잔액 부족으로 출금 실패
+
+원금 1000원, 최종 잔액는 200원
+
+`t1` 은 800원 출금에 성공하지만, `t2` 는 잔액 부족으로 출금에 실패한다. 
+
+그리고 최종 잔액은 1000원에서 200원이 되므로 정확하게 맞다.
+
+이렇게 자바의 `synchronized` 를 사용하면 한 번에 하나의 스레드만 실행하는 안전한 임계 영역 구간을 편리하게 만들 수 있다.
+
+**참고: 락을 획득하는 순서는 보장되지 않는다.**
+
+만약 `BankAccount(x001)` 인스턴스의 `withdraw()` 를 수 많은 스레드가 동시에 호출한다면, 1개의 스레드만 락을 획득하고 나머지는 모두 `BLOCKED` 상태가 된다. 
+
+그리고 이후에 `BankAccount(x001)` 인스턴스에 락을 반납하면, 해당 인스턴스의 락을 기다리는 수 많은 스레드 중에 하나의 스레드만 락을 획득하고, 락을 획득한 스레드만
+`BLOCKED` `RUNNABLE` 상태가 된다.
+
+이때 어떤 순서로 락을 획득하는지는 자바 표준에 정의되어 있지 않다. 
+
+따라서 순서를 보장하지 않고, 환경에 따라서 순서가 달라질 수 있다.
+
+**참고**: `volatile` 를 사용하지 않아도 `synchronized` 안에서 접근하는 변수의 메모리 가시성 문제는 해결된다. (이 전에 학습한 자바 메모리 모델 참고)
+
+## synchronized 코드 블럭
+
+`synchronized` 의 가장 큰 장점이자 단점은 한 번에 하나의 스레드만 실행할 수 있다는 점이다. 
+
+여러 스레드가 동시에 실행하지 못하기 때문에, 전체로 보면 성능이 떨어질 수 있다. 
+
+따라서 `synchronized` 를 통해 여러 스레드를 동시에 실행할 수 없는 코드 구간은 꼭! 필요한 곳으로 한정해서 설정해야 한다.
+
+처음에 로그를 출력하는 "거래 시작", 그리고 마지막에 로그를 출력하는 "거래 종료" 부분은 공유 자원을 전혀 사용하지 않는다. 
+
+이런 부분은 동시에 실행해도 아무 문제가 발생하지 않는다.
+
+그런데 메서드 앞에 적용한 `synchronized` 의 적용 범위는 메서드 전체이다. 
+
+따라서 여러 스레드가 함께 실행해도 문제가 없는 "거래 시작", "거래 종료"를 출력하는 코드도 한 번에 하나의 스레드만 실행할 수 있다.
+
+자바는 이런 문제를 해결하기 위해 `synchronized` 를 메서드 단위가 아니라, 특정 코드 블럭에 최적화해서 적용할 수 있는 기능을 제공한다.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
