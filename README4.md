@@ -372,11 +372,83 @@ balance = balance - amount;
 
 ## synchronized 메서드
 
+자바의 `synchronized` 키워드를 사용하면 한 번에 하나의 스레드만 실행할 수 있는 코드 구간을 만들 수 있다.
+
+
+```java
+public class BankAccountV2 implements BankAccount {
+
+    volatile private int balance;
+
+    public BankAccountV2(int initialBalance) {
+        this.balance = initialBalance;
+    }
+
+    @Override
+    public synchronized boolean withdraw(int amount) {
+        log("거래 시작 : " + getClass().getSimpleName());
+
+        log("[검증 시작] 출금액: " + amount + ", 잔액: " + balance);
+
+        if(balance < amount) {
+            log("[검증 실패]");
+            return false;
+        }
+
+        log("[검증 완료] 출금액: " + amount + ", 잔액: " + balance);
+
+        sleep(1000);
+
+        balance -= amount;
+
+        log("[출금 완료] 출금액: " + amount + ", 잔액: " + balance);
+
+        log("거래 종료");
+
+        return false;
+    }
+
+
+    @Override
+    public int getBalance() {
+        return balance;
+    }
+}
+```
+
+```shell
+16:50:48.257 [       t1] 거래 시작 : BankAccountV2
+16:50:48.263 [       t1] [검증 시작] 출금액: 800, 잔액: 1000
+16:50:48.263 [       t1] [검증 완료] 출금액: 800, 잔액: 1000
+16:50:48.741 [     main] t1 state: TIMED_WAITING
+16:50:48.741 [     main] t2 state: BLOCKED
+16:50:49.269 [       t1] [출금 완료] 출금액: 800, 잔액: 200
+16:50:49.269 [       t1] 거래 종료
+16:50:49.270 [       t2] 거래 시작 : BankAccountV2
+16:50:49.270 [       t2] [검증 시작] 출금액: 800, 잔액: 200
+16:50:49.270 [       t2] [검증 실패]
+16:50:49.274 [     main] 최종잔액 : 200
+```
+
+환경에 따라 t2가 먼저 시작될 수 있다.
+
+### synchronized 분석
+
+지금부터 자바의 `synchronized` 가 어떻게 작동하는지 그림으로 분석해보자.
+
+참고로 실행 결과를 보면 `t2` 가 `BLOCKED` 상태인데, 이 상태도 확인해보자.
 
 
 
+**모든 객체(인스턴스)는 내부에 자신만의 락( `lock` )을 가지고 있다.** 모니터 락(monitor lock)이라도고 부른다.
 
+객체 내부에 있고 우리가 확인하기는 어렵다.
 
+스레드가 `synchronized` 키워드가 있는 메서드에 진입하려면 반드시 해당 인스턴스의 락이 있어야 한다! 
+
+여기서는 `BankAccount(x001)` 인스턴스의 `synchronized withdraw()` 메서드를 호출하므로 이 인스턴스의 락이 필요하다.
+
+스레드 `t1` , `t2` 는 `withdraw()` 를 실행하기 직전이다.
 
 
 
