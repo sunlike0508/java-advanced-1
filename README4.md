@@ -166,7 +166,28 @@ if (balance < amount) {
 이 문제는 메모리 가시성 문제를 해결해도 여전히 발생한다.
 
 
+## 동시성 문제
 
+
+<img width="693" alt="Screenshot 2024-11-02 at 16 05 47" src="https://github.com/user-attachments/assets/e06d1e98-fb72-44c3-8a03-02fad153f60f">
+
+<img width="674" alt="Screenshot 2024-11-02 at 16 05 59" src="https://github.com/user-attachments/assets/0119c9c8-5787-4ec0-a07f-ff1bb8a22b23">
+
+<img width="678" alt="Screenshot 2024-11-02 at 16 06 05" src="https://github.com/user-attachments/assets/77f849e7-ac03-4938-9b7a-93eb80b4a7a2">
+
+<img width="680" alt="Screenshot 2024-11-02 at 16 06 11" src="https://github.com/user-attachments/assets/44ee0a08-9d44-47a3-9ea3-b4d0c1a24c4f">
+
+<img width="673" alt="Screenshot 2024-11-02 at 16 06 15" src="https://github.com/user-attachments/assets/b93bc73d-4a11-4678-baf6-1e1530ee1f1e">
+
+<img width="675" alt="Screenshot 2024-11-02 at 16 06 19" src="https://github.com/user-attachments/assets/6fa5f972-3164-4f9e-91e6-66c5c1d1c564">
+
+<img width="675" alt="Screenshot 2024-11-02 at 16 06 27" src="https://github.com/user-attachments/assets/93a82289-f6ee-4031-a139-1e627a7c73aa">
+
+<img width="678" alt="Screenshot 2024-11-02 at 16 06 31" src="https://github.com/user-attachments/assets/82b262be-4d15-4ec8-bb08-210a6618be2a">
+
+<img width="683" alt="Screenshot 2024-11-02 at 16 06 37" src="https://github.com/user-attachments/assets/f61dafea-13c2-4c18-99e8-2d6a5416f0ed">
+
+<img width="678" alt="Screenshot 2024-11-02 at 16 06 45" src="https://github.com/user-attachments/assets/899261a5-7e09-45fd-9bcc-1d24dd5906a5">
 
 
 
