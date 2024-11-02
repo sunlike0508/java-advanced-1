@@ -558,11 +558,121 @@ public class BankAccountV2 implements BankAccount {
 
 자바는 이런 문제를 해결하기 위해 `synchronized` 를 메서드 단위가 아니라, 특정 코드 블럭에 최적화해서 적용할 수 있는 기능을 제공한다.
 
+```java
+public class BankAccountV3 implements BankAccount {
+
+    volatile private int balance;
+
+    public BankAccountV3(int initialBalance) {
+        this.balance = initialBalance;
+    }
+
+    @Override
+    public boolean withdraw(int amount) {
+        log("거래 시작 : " + getClass().getSimpleName());
+
+        synchronized(this) {
+            log("[검증 시작] 출금액: " + amount + ", 잔액: " + balance);
+
+            if(balance < amount) {
+                log("[검증 실패]");
+                return false;
+            }
+
+            log("[검증 완료] 출금액: " + amount + ", 잔액: " + balance);
+
+            sleep(1000);
+
+            balance -= amount;
+
+            log("[출금 완료] 출금액: " + amount + ", 잔액: " + balance);
+        }
+
+        log("거래 종료");
+
+        return false;
+    }
 
 
+    @Override
+    public int getBalance() {
+        return balance;
+    }
+}
+```
 
 
+```shell
+19:17:05.351 [       t2] 거래 시작 : BankAccountV3
+19:17:05.351 [       t1] 거래 시작 : BankAccountV3
+19:17:05.358 [       t2] [검증 시작] 출금액: 800, 잔액: 1000
+19:17:05.358 [       t2] [검증 완료] 출금액: 800, 잔액: 1000
+19:17:05.839 [     main] t1 state: BLOCKED
+19:17:05.840 [     main] t2 state: TIMED_WAITING
+19:17:06.364 [       t2] [출금 완료] 출금액: 800, 잔액: 200
+19:17:06.365 [       t2] 거래 종료
+19:17:06.365 [       t1] [검증 시작] 출금액: 800, 잔액: 200
+19:17:06.366 [       t1] [검증 실패]
+19:17:06.371 [     main] 최종잔액 : 200
+```
 
+이렇게 하면 꼭 필요한 코드만 안전한 임계 영역으로 만들 수 있다.
+
+`synchronized (this)` : 여기서 괄호`()` 안에 들어가는 값은 락을 획득할 인스턴스의 참조이다.
+
+여기서는 `BankAccountV3(x001)` 의 인스턴스의 락을 사용하므로 이 인스턴스의 참조인 `this` 를 넣어주면 된다.
+
+이전에 메서드에 `synchronized` 를 사용할 때와 같은 인스턴스에서 락을 획득한다.
+
+`getBalance()` 의 경우 `return balance` 코드 한 줄이므로 `synchronized` 를 메서드에 설정하나 코드 블럭으로 설정하나 둘다 같다.
+
+`synchronized` 블럭 기능을 사용한 덕분에 딱 필요한 부분에 임계 영역을 지정할 수 있었다. 
+
+덕분에 아주 약간이지만 여러 스레드가 동시에 수행되는 부분을 더 늘려서, 전체적으로 성능을 더 향상할 수 있었다. 
+
+지금의 예는 단순히 로그 몇 줄 출력하는 정도이지만, 만약 작업이 오래 수행된다면 큰 성능 차이가 발생할 것이다.
+
+여기서는 처음 거래 시작 부분이 `t1` , `t2` 동시에 실행된 것을 확인할 수 있다. 
+
+```shell
+19:17:05.351 [       t2] 거래 시작 : BankAccountV3
+19:17:05.351 [       t1] 거래 시작 : BankAccountV3
+```
+
+여기서 이야기하고 싶은 핵심은 하나의 스레드만 실행할 수 있는 안전한 임계 영역은 가능한 최소한의 범위에 적용해야 한다는 점이다. 
+
+그래야 동시에 여러 스레드가 실행할 수 있는 부분을 늘려서, 전체적인 처리 성능을 더 높일 수 있다.
+
+### **synchronized 동기화 정리**
+
+자바에서 동기화(synchronization)는 여러 스레드가 동시에 접근할 수 있는 자원(예: 객체, 메서드)에 대해 일관성 있고 안전한 접근을 보장하기 위한 메커니즘이다. 
+
+동기화는 주로 멀티스레드 환경에서 발생할 수 있는 문제, 예를 들어 데 이터 손상이나 예기치 않은 결과를 방지하기 위해 사용된다.
+
+**메서드 동기화**: 메서드를 `synchronized` 로 선언해서, 메서드에 접근하는 스레드가 하나뿐이도록 보장한다. 
+
+```java
+public synchronized void synchronizedMethod() { // 코드
+}
+```
+
+**블록 동기화**: 코드 블록을 `synchronized` 로 감싸서, 동기화를 구현할 수 있다. 
+
+```java
+public void method() {
+    synchronized(this) {
+        // 동기화된 코드 
+    }
+}
+```
+
+이런 동기화를 사용하면 다음 문제들을 해결할 수 있다.
+
+**경합 조건(Race condition)**: 두 개 이상의 스레드가 경쟁적으로 동일한 자원을 수정할 때 발생하는 문제. 
+
+**데이터 일관성**: 여러 스레드가 동시에 읽고 쓰는 데이터의 일관성을 유지.
+
+동기화는 멀티스레드 환경에서 필수적인 기능이지만, 과도하게 사용할 경우 성능 저하를 초래할 수 있으므로 꼭 필요한 곳에 적절히 사용해야 한다.
 
 
 

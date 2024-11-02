@@ -12,23 +12,25 @@ public class BankAccountV3 implements BankAccount {
     }
 
     @Override
-    public synchronized boolean withdraw(int amount) {
+    public boolean withdraw(int amount) {
         log("거래 시작 : " + getClass().getSimpleName());
 
-        log("[검증 시작] 출금액: " + amount + ", 잔액: " + balance);
+        synchronized(this) {
+            log("[검증 시작] 출금액: " + amount + ", 잔액: " + balance);
 
-        if(balance < amount) {
-            log("[검증 실패]");
-            return false;
+            if(balance < amount) {
+                log("[검증 실패]");
+                return false;
+            }
+
+            log("[검증 완료] 출금액: " + amount + ", 잔액: " + balance);
+
+            sleep(1000);
+
+            balance -= amount;
+
+            log("[출금 완료] 출금액: " + amount + ", 잔액: " + balance);
         }
-
-        log("[검증 완료] 출금액: " + amount + ", 잔액: " + balance);
-
-        sleep(1000);
-
-        balance -= amount;
-
-        log("[출금 완료] 출금액: " + amount + ", 잔액: " + balance);
 
         log("거래 종료");
 

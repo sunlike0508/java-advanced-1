@@ -7,3 +7,5 @@
 [메모리 가시성] (https://github.com/sunlike0508/java-advanced-1/blob/main/README3.md)
 
 [동기화] (https://github.com/sunlike0508/java-advanced-1/blob/main/README4.md)
+
+[문제] (https://github.com/sunlike0508/java-advanced-1/blob/main/README5.md)
