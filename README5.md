@@ -39,6 +39,9 @@ public class SyncTest2Main {
     }
 }
 ```
+
+<img width="688" alt="Screenshot 2024-11-02 at 19 39 14" src="https://github.com/user-attachments/assets/a8f526ca-12e6-448f-9a51-ce3fc9538d9b">
+
 `localValue` 는 지역 변수이다.
 
 스택 영역은 각각의 스레드가 가지는 별도의 메모리 공간이다. 
