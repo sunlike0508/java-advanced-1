@@ -1,8 +1,8 @@
 # 고급 자바 1
 
-[프로세스와 쓰레드] (https://github.com/sunlike0508/java-advanced-1/blob/main/README1.md)
+[프로세스와 쓰레드](https://github.com/sunlike0508/java-advanced-1/blob/main/README1.md)
 
-[스레드와 생명주기] (https://github.com/sunlike0508/java-advanced-1/blob/main/README2.md)
+[스레드와 생명주기](https://github.com/sunlike0508/java-advanced-1/blob/main/README2.md)
 
 [메모리 가시성] (https://github.com/sunlike0508/java-advanced-1/blob/main/README3.md)
 
