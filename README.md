@@ -9,3 +9,5 @@
 [동기화] (https://github.com/sunlike0508/java-advanced-1/blob/main/README4.md)
 
 [문제] (https://github.com/sunlike0508/java-advanced-1/blob/main/README5.md)
+
+[고급 동기화 - concurrent.Lock] (https://github.com/sunlike0508/java-advanced-1/blob/main/README6.md)
