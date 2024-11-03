@@ -74,8 +74,7 @@ public class LockSupportMainV1 {
 23:28:36.059 [ Thread-1] 인터럽트 상태: false
 ```
 
-
-
+<img width="523" alt="Screenshot 2024-11-03 at 23 29 38" src="https://github.com/user-attachments/assets/983475b7-1076-4772-8ca3-fbf2beed1dde">
 
 `main` 스레드가 `Thread-1` 을 `start()` 하면 `Thread-1` 은 `RUNNABLE` 상태가 된다.
 
