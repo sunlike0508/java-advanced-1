@@ -186,61 +186,70 @@ public class BankAccountV4 implements BankAccount {
 
 모니터 락과 `BLOCKED` 상태는 `synchronized` 에서만 사용된다.
 
-
+<img width="526" alt="Screenshot 2024-11-04 at 22 24 29" src="https://github.com/user-attachments/assets/2fc8267c-90e5-426b-9a95-c4c3138beafe">
 
 `t1` , `t2` 가 출금을 시작한다. 여기서는 `t1` 이 약간 먼저 실행된다고 가정하겠다.
-`ReenterantLock` 내부에는 락과 락을 얻지 못해 대기하는 스레드를 관리하는 대기 큐가 존재한다. 여기서 이야기하는 락은 객체 내부에 있는 모니터 락이 아니다. `ReentrantLock` 이 제공하는 기능이다.
 
+`ReenterantLock` 내부에는 락과 락을 얻지 못해 대기하는 스레드를 관리하는 대기 큐가 존재한다. 
 
+여기서 이야기하는 락은 객체 내부에 있는 모니터 락이 아니다. `ReentrantLock` 이 제공하는 기능이다.
 
+<img width="526" alt="Screenshot 2024-11-04 at 22 25 24" src="https://github.com/user-attachments/assets/18ef6afa-d483-4f89-aafb-81858be5ee88">
 
 `t1` : `ReenterantLock` 에 있는 락을 획득한다.
+
 락을 획득하는 경우 `RUNNABLE` 상태가 유지되고, 임계 영역의 코드를 실행할 수 있다.
 
-
+<img width="529" alt="Screenshot 2024-11-04 at 22 25 27" src="https://github.com/user-attachments/assets/4f6e31d0-b5de-4b98-ae3c-440377320954">
 
 `t1` : 임계 영역의 코드를 실행한다.
 
-
+<img width="530" alt="Screenshot 2024-11-04 at 22 25 31" src="https://github.com/user-attachments/assets/c3f49090-c28d-4d5c-9b85-075396be9127">
 
 `t2` : `ReenterantLock` 에 있는 락의 획득을 시도한다. 하지만 락이 없다.
 
-
+<img width="535" alt="Screenshot 2024-11-04 at 22 25 36" src="https://github.com/user-attachments/assets/6cf807d2-aaa2-494e-8c11-374513444cf2">
 
 `t2` : 락을 획득하지 못하면 `WAITING` 상태가 되고, 대기 큐에서 관리된다.
+
 `LockSupoort.park()` 가 내부에서 호출된다.
-참고로 `tryLock(long time, TimeUnit unit)` 와 같은 시간 대기 기능을 사용하면 `TIMED_WAITING`
-이 되고, 대기 큐에서 관리된다.
 
+참고로 `tryLock(long time, TimeUnit unit)` 와 같은 시간 대기 기능을 사용하면 `TIMED_WAITING` 이 되고, 대기 큐에서 관리된다.
 
-
-
+<img width="531" alt="Screenshot 2024-11-04 at 22 25 46" src="https://github.com/user-attachments/assets/61aad37c-7e46-4285-ac6e-407d0e3bf499">
 
 `t1` : 임계 영역의 수행을 완료했다. 이때 잔액은 `balance=200` 이 된다.
 
-
-
+<img width="517" alt="Screenshot 2024-11-04 at 22 25 59" src="https://github.com/user-attachments/assets/dc978f78-4234-4821-b3e8-9f2c7876dcbd">
 
 `t1` : 임계 영역을 수행하고 나면 `lock.unlock()` 을 호출한다.
-**1. t1**: 락을 반납한다.
-**2. t1**: 대기 큐의 스레드를 하나 깨운다. `LockSupoort.unpark(thread)` 가 내부에서 호출된다. **3. t2**: `RUNNABLE` 상태가 되면서 깨어난 스레드는 락 획득을 시도한다.
-이때 락을 획득하면 `lock.lock()` 을 빠져나오면서 대기 큐에서도 제거된다. 이때 락을 획득하지 못하면 다시 대기 상태가 되면서 대기 큐에 유지된다.
-참고로 락 획득을 시도하는 잠깐 사이에 새로운 스레드가 락을 먼저 가져갈 수 있다. 공정 모드의 경우 대기 큐에 먼저 대기한 스레드가 먼저 락을 가져간다.
+
+* **1. t1**: 락을 반납한다.
+*  **2. t1**: 대기 큐의 스레드를 하나 깨운다. `LockSupoort.unpark(thread)` 가 내부에서 호출된다.
+*  **3. t2**: `RUNNABLE` 상태가 되면서 깨어난 스레드는 락 획득을 시도한다.
+ * 이때 락을 획득하면 `lock.lock()` 을 빠져나오면서 대기 큐에서도 제거된다.
+ * 이때 락을 획득하지 못하면 다시 대기 상태가 되면서 대기 큐에 유지된다.
+  * 참고로 락 획득을 시도하는 잠깐 사이에 새로운 스레드가 락을 먼저 가져갈 수 있다.
+  * 공정 모드의 경우 대기 큐에 먼저 대기한 스레드가 먼저 락을 가져간다.
 
 
+<img width="526" alt="Screenshot 2024-11-04 at 22 26 14" src="https://github.com/user-attachments/assets/cc222a72-c905-494c-b6cb-c692dbccb7d5">
 
 
 `t2` : 락을 획득한 `t2` 스레드는 `RUNNABLE` 상태로 임계 영역을 수행한다.
 
+<img width="530" alt="Screenshot 2024-11-04 at 22 26 21" src="https://github.com/user-attachments/assets/937d2479-450e-4ec6-a137-17a578518098">
 
 
 `t2` : 잔액[200]이 출금액[800]보다 적으므로 검증 로직을 통과하지 못한다. 따라서 검증 실패이다. `return false` 가 호출된다.
 이때 `finally` 구문이 있으므로 `finally` 구문으로 이동한다.
 
+<img width="541" alt="Screenshot 2024-11-04 at 22 26 32" src="https://github.com/user-attachments/assets/08281181-f505-4a9b-a618-9077ba3cbe40">
 
 
 `t2` : `lock.unlock()` 을 호출해서 락을 반납하고, 대기 큐의 스레드를 하나 깨우려고 시도한다. 대기 큐에 스레 드가 없으므로 이때는 깨우지 않는다.
 
+<img width="526" alt="Screenshot 2024-11-04 at 22 26 43" src="https://github.com/user-attachments/assets/9097af11-d3dc-43b6-9edc-d22fa316c2ef">
 
 **참고**: `volatile` 를 사용하지 않아도 `Lock` 을 사용할 때 접근하는 변수의 메모리 가시성 문제는 해결된다. (이전에 학
 습한 자바 메모리 모델 참고)
