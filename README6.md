@@ -225,31 +225,228 @@ public class BankAccountV4 implements BankAccount {
 `t1` : 임계 영역을 수행하고 나면 `lock.unlock()` 을 호출한다.
 
 * **1. t1**: 락을 반납한다.
-*  **2. t1**: 대기 큐의 스레드를 하나 깨운다. `LockSupoort.unpark(thread)` 가 내부에서 호출된다.
-*  **3. t2**: `RUNNABLE` 상태가 되면서 깨어난 스레드는 락 획득을 시도한다.
- * 이때 락을 획득하면 `lock.lock()` 을 빠져나오면서 대기 큐에서도 제거된다.
- * 이때 락을 획득하지 못하면 다시 대기 상태가 되면서 대기 큐에 유지된다.
-  * 참고로 락 획득을 시도하는 잠깐 사이에 새로운 스레드가 락을 먼저 가져갈 수 있다.
-  * 공정 모드의 경우 대기 큐에 먼저 대기한 스레드가 먼저 락을 가져간다.
-
+* **2. t1**: 대기 큐의 스레드를 하나 깨운다. `LockSupoort.unpark(thread)` 가 내부에서 호출된다.
+* **3. t2**: `RUNNABLE` 상태가 되면서 깨어난 스레드는 락 획득을 시도한다.
+   * 이때 락을 획득하면 `lock.lock()` 을 빠져나오면서 대기 큐에서도 제거된다.
+   * 이때 락을 획득하지 못하면 다시 대기 상태가 되면서 대기 큐에 유지된다.
+     * 참고로 락 획득을 시도하는 잠깐 사이에 새로운 스레드가 락을 먼저 가져갈 수 있다.
+     * 공정 모드의 경우 대기 큐에 먼저 대기한 스레드가 먼저 락을 가져간다.
 
 <img width="526" alt="Screenshot 2024-11-04 at 22 26 14" src="https://github.com/user-attachments/assets/cc222a72-c905-494c-b6cb-c692dbccb7d5">
-
 
 `t2` : 락을 획득한 `t2` 스레드는 `RUNNABLE` 상태로 임계 영역을 수행한다.
 
 <img width="530" alt="Screenshot 2024-11-04 at 22 26 21" src="https://github.com/user-attachments/assets/937d2479-450e-4ec6-a137-17a578518098">
 
+`t2` : 잔액[200]이 출금액[800]보다 적으므로 검증 로직을 통과하지 못한다. 
 
-`t2` : 잔액[200]이 출금액[800]보다 적으므로 검증 로직을 통과하지 못한다. 따라서 검증 실패이다. `return false` 가 호출된다.
+따라서 검증 실패이다. `return false` 가 호출된다.
+
 이때 `finally` 구문이 있으므로 `finally` 구문으로 이동한다.
 
 <img width="541" alt="Screenshot 2024-11-04 at 22 26 32" src="https://github.com/user-attachments/assets/08281181-f505-4a9b-a618-9077ba3cbe40">
 
 
-`t2` : `lock.unlock()` 을 호출해서 락을 반납하고, 대기 큐의 스레드를 하나 깨우려고 시도한다. 대기 큐에 스레 드가 없으므로 이때는 깨우지 않는다.
+`t2` : `lock.unlock()` 을 호출해서 락을 반납하고, 대기 큐의 스레드를 하나 깨우려고 시도한다. 
+
+대기 큐에 스레 드가 없으므로 이때는 깨우지 않는다.
 
 <img width="526" alt="Screenshot 2024-11-04 at 22 26 43" src="https://github.com/user-attachments/assets/9097af11-d3dc-43b6-9edc-d22fa316c2ef">
 
-**참고**: `volatile` 를 사용하지 않아도 `Lock` 을 사용할 때 접근하는 변수의 메모리 가시성 문제는 해결된다. (이전에 학
-습한 자바 메모리 모델 참고)
+**참고**: `volatile` 를 사용하지 않아도 `Lock` 을 사용할 때 접근하는 변수의 메모리 가시성 문제는 해결된다. 
+
+(이전에 학습한 자바 메모리 모델 참고)
+
+## ReentrantLock - 대기 중단
+
+`ReentrantLock` 을 사용하면 락을 무한 대기하지 않고, 중간에 빠져나오는 것이 가능하다. 
+
+심지어 락을 얻을 수 없다면 기다리지 않고 즉시 빠져나오는 것도 가능하다. 
+
+다음 기능들을 어떻게 활용하는지 알아보자.
+
+**`boolean tryLock()`**
+
+* 락 획득을 시도하고, 즉시 성공 여부를 반환한다. 만약 다른 스레드가 이미 락을 획득했다면 `false` 를 반환하고, 그렇지 않으면 락을 획득하고 `true` 를 반환한다.
+* 예) 맛집에 대기 줄이 없으면 바로 들어가고, 대기 줄이 있으면 즉시 포기한다.
+
+**`boolean tryLock(long time, TimeUnit unit)`**
+
+* 주어진 시간 동안 락 획득을 시도한다. 주어진 시간 안에 락을 획득하면 `true` 를 반환한다. 
+* 주어진 시간이 지나도 락을 획득하지 못한 경우 `false` 를 반환한다. 이 메서드는 대기 중 인터럽트가 발생하면 `InterruptedException` 이 발생하며 락 획득을 포기한다.
+* 예) 맛집에 줄을 서지만 특정 시간 만큼만 기다린다. 특정 시간이 지나도 계속 줄을 서야 한다면 포기한다. 친구가 다른 맛집을 찾았다고 중간에 연락해도 포기한다.
+
+```java
+public class BankAccountV5 implements BankAccount {
+
+     private int balance;
+
+     private final Lock lock = new ReentrantLock();
+
+     public BankAccountV5(int initialBalance) {
+         this.balance = initialBalance;
+     }
+
+     @Override
+     public boolean withdraw(int amount) {
+         log("거래 시작 : " + getClass().getSimpleName());
+
+         if(!lock.tryLock()) {
+             log("[진입 실패] 이미 처리중인 작업이 있습니다");
+             return false;
+         }
+
+         try {
+             log("[검증 시작] 출금액: " + amount + ", 잔액: " + balance);
+
+             if(balance < amount) {
+                 log("[검증 실패]");
+                 return false;
+             }
+
+             log("[검증 완료] 출금액: " + amount + ", 잔액: " + balance);
+
+             sleep(1000);
+
+             balance -= amount;
+
+             log("[출금 완료] 출금액: " + amount + ", 잔액: " + balance);
+         } finally {
+             lock.unlock();
+         }
+
+         log("거래 종료");
+
+         return false;
+     }
+
+
+     @Override
+     public int getBalance() {
+         lock.lock();
+         try {
+             return balance;
+         } finally {
+             lock.unlock();
+         }
+     }
+ }
+```
+
+```shell
+22:37:57.679 [       t1] 거래 시작 : BankAccountV5
+22:37:57.679 [       t2] 거래 시작 : BankAccountV5
+22:37:57.680 [       t2] [진입 실패] 이미 처리중인 작업이 있습니다
+22:37:57.684 [       t1] [검증 시작] 출금액: 800, 잔액: 1000
+22:37:57.684 [       t1] [검증 완료] 출금액: 800, 잔액: 1000
+22:37:58.169 [     main] t1 state: TIMED_WAITING
+22:37:58.169 [     main] t2 state: TERMINATED
+22:37:58.690 [       t1] [출금 완료] 출금액: 800, 잔액: 200
+22:37:58.691 [       t1] 거래 종료
+22:37:58.698 [     main] 최종잔액 : 200
+```
+
+### tryLock(시간) 예시
+
+```java
+public class BankAccountV6 implements BankAccount {
+
+    private int balance;
+
+    private final Lock lock = new ReentrantLock();
+
+
+    public BankAccountV6(int initialBalance) {
+        this.balance = initialBalance;
+    }
+
+
+    @Override
+    public boolean withdraw(int amount) {
+        log("거래 시작 : " + getClass().getSimpleName());
+
+        try {
+            if(!lock.tryLock(500, TimeUnit.MILLISECONDS)) {
+                log("[진입 실패] 이미 처리중인 작업이 있습니다");
+                return false;
+            }
+        } catch(InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+        try {
+            log("[검증 시작] 출금액: " + amount + ", 잔액: " + balance);
+
+            if(balance < amount) {
+                log("[검증 실패]");
+                return false;
+            }
+
+            log("[검증 완료] 출금액: " + amount + ", 잔액: " + balance);
+
+            sleep(1000);
+
+            balance -= amount;
+
+            log("[출금 완료] 출금액: " + amount + ", 잔액: " + balance);
+        } finally {
+            lock.unlock();
+        }
+
+        log("거래 종료");
+
+        return false;
+    }
+
+
+    @Override
+    public int getBalance() {
+        lock.lock();
+        try {
+            return balance;
+        } finally {
+            lock.unlock();
+        }
+    }
+}
+```
+
+```shell
+22:39:31.626 [       t1] 거래 시작 : BankAccountV6
+22:39:31.626 [       t2] 거래 시작 : BankAccountV6
+22:39:31.635 [       t1] [검증 시작] 출금액: 800, 잔액: 1000 // sleep(1000)
+22:39:31.635 [       t1] [검증 완료] 출금액: 800, 잔액: 1000 // tryLock(500)
+22:39:32.115 [     main] t1 state: TIMED_WAITING
+22:39:32.116 [     main] t2 state: TIMED_WAITING
+22:39:32.135 [       t2] [진입 실패] 이미 처리중인 작업이 있습니다
+22:39:32.641 [       t1] [출금 완료] 출금액: 800, 잔액: 200
+22:39:32.643 [       t1] 거래 종료
+22:39:32.644 [     main] 최종잔액 : 200
+```
+
+`t1` : 먼저 락을 획득하고 임계 영역을 수행한다.
+
+`t2` : `lock.tryLock(0.5초)` 을 호출하고 락 획득을 시도한다. 
+
+락이 없으므로 0.5초간 대기한다. 이때 `t2` 는 `TIMED_WAITING` 상태가 된다.
+
+내부에서는 `LockSupport.parkNanos(시간)` 이 호출된다.
+
+`t2` : 대기 시간인 0.5초간 락을 획득하지 못했다. `lock.tryLock(시간)` 에서 즉시 빠져나온다. 
+
+이때 `false` 가 반환된다.
+
+스레드는 `TIMED_WAITING` `RUNNABLE` 이 된다.
+
+`t2` : "[진입 실패] 이미 처리중인 작업이 있습니다."를 출력하고 `false` 를 반환하면서 메서드를 종료한다. 
+
+`t1` : 임계 영역의 수행을 완료하고 거래를 종료한다. 
+
+마지막으로 락을 반납한다.
+
+**정리**
+
+자바 1.5에서 등장한 `Lock` 인터페이스와 `ReentrantLock` 덕분에 `synchronized` 의 단점인 무한 대기와 공정성 문제를 극복하고, 또 더욱 유연하고 세밀한 스레드 제어가 가능하게 되었다.
+
+
+
