@@ -94,13 +94,153 @@ public class LockSupportMainV1 {
 
 따라서 외부 스레드의 도움을 받아야 깨어날 수 있다.
 
+## ReentrantLock - 활용
+
+```java
+public class BankAccountV4 implements BankAccount {
+
+  private int balance;
+
+  private final Lock lock = new ReentrantLock();
+
+  public BankAccountV4(int initialBalance) {
+    this.balance = initialBalance;
+  }
+
+  @Override
+  public boolean withdraw(int amount) {
+    log("거래 시작 : " + getClass().getSimpleName());
+
+    lock.lock();
+
+    try {
+      log("[검증 시작] 출금액: " + amount + ", 잔액: " + balance);
+
+      if(balance < amount) {
+        log("[검증 실패]");
+        return false;
+      }
+
+      log("[검증 완료] 출금액: " + amount + ", 잔액: " + balance);
+
+      sleep(1000);
+
+      balance -= amount;
+
+      log("[출금 완료] 출금액: " + amount + ", 잔액: " + balance);
+    } finally {
+      lock.unlock();
+    }
+
+    log("거래 종료");
+
+    return false;
+  }
+
+
+  @Override
+  public int getBalance() {
+    lock.lock();
+    try {
+      return balance;
+    } finally {
+      lock.unlock();
+    }
+  }
+}
+```
+
+```shell
+22:21:26.312 [       t1] 거래 시작 : BankAccountV4
+22:21:26.312 [       t2] 거래 시작 : BankAccountV4
+22:21:26.317 [       t1] [검증 시작] 출금액: 800, 잔액: 1000
+22:21:26.317 [       t1] [검증 완료] 출금액: 800, 잔액: 1000
+22:21:26.803 [     main] t1 state: TIMED_WAITING
+22:21:26.803 [     main] t2 state: WAITING
+22:21:27.323 [       t1] [출금 완료] 출금액: 800, 잔액: 200
+22:21:27.324 [       t1] 거래 종료
+22:21:27.324 [       t2] [검증 시작] 출금액: 800, 잔액: 200
+22:21:27.325 [       t2] [검증 실패]
+22:21:27.332 [     main] 최종잔액 : 200
+```
+
+`private final Lock lock = new ReentrantLock()` 을 사용하도록 선언한다. 
+
+`synchronized(this)` 대신에 `lock.lock()` 을 사용해서 락을 건다.
+
+`lock()` `unlock()` 까지는 안전한 임계 영역이 된다.
+
+임계 영역이 끝나면 반드시! 락을 반납해야 한다. 
+
+그렇지 않으면 대기하는 스레드가 락을 얻지 못한다.
+
+따라서 `lock.unlock()` 은 반드시 `finally` 블럭에 작성해야한다. 
+
+이렇게 하면 검증에 실패해서 중간 에 `return` 을 호출해도 또는 중간에 예상치 못한 예외가 발생해도 `lock.unlock()` 이 반드시 호출된다.
+
+**주의!**
+
+여기서 사용하는 락은 객체 내부에 있는 모니터 락이 아니다! 
+
+`Lock` 인터페이스와 `ReentrantLock` 이 제공하는 기능이다!
+
+모니터 락과 `BLOCKED` 상태는 `synchronized` 에서만 사용된다.
+
+
+
+`t1` , `t2` 가 출금을 시작한다. 여기서는 `t1` 이 약간 먼저 실행된다고 가정하겠다.
+`ReenterantLock` 내부에는 락과 락을 얻지 못해 대기하는 스레드를 관리하는 대기 큐가 존재한다. 여기서 이야기하는 락은 객체 내부에 있는 모니터 락이 아니다. `ReentrantLock` 이 제공하는 기능이다.
+
+
+
+
+`t1` : `ReenterantLock` 에 있는 락을 획득한다.
+락을 획득하는 경우 `RUNNABLE` 상태가 유지되고, 임계 영역의 코드를 실행할 수 있다.
+
+
+
+`t1` : 임계 영역의 코드를 실행한다.
+
+
+
+`t2` : `ReenterantLock` 에 있는 락의 획득을 시도한다. 하지만 락이 없다.
+
+
+
+`t2` : 락을 획득하지 못하면 `WAITING` 상태가 되고, 대기 큐에서 관리된다.
+`LockSupoort.park()` 가 내부에서 호출된다.
+참고로 `tryLock(long time, TimeUnit unit)` 와 같은 시간 대기 기능을 사용하면 `TIMED_WAITING`
+이 되고, 대기 큐에서 관리된다.
 
 
 
 
 
+`t1` : 임계 영역의 수행을 완료했다. 이때 잔액은 `balance=200` 이 된다.
 
 
 
 
+`t1` : 임계 영역을 수행하고 나면 `lock.unlock()` 을 호출한다.
+**1. t1**: 락을 반납한다.
+**2. t1**: 대기 큐의 스레드를 하나 깨운다. `LockSupoort.unpark(thread)` 가 내부에서 호출된다. **3. t2**: `RUNNABLE` 상태가 되면서 깨어난 스레드는 락 획득을 시도한다.
+이때 락을 획득하면 `lock.lock()` 을 빠져나오면서 대기 큐에서도 제거된다. 이때 락을 획득하지 못하면 다시 대기 상태가 되면서 대기 큐에 유지된다.
+참고로 락 획득을 시도하는 잠깐 사이에 새로운 스레드가 락을 먼저 가져갈 수 있다. 공정 모드의 경우 대기 큐에 먼저 대기한 스레드가 먼저 락을 가져간다.
 
+
+
+
+`t2` : 락을 획득한 `t2` 스레드는 `RUNNABLE` 상태로 임계 영역을 수행한다.
+
+
+
+`t2` : 잔액[200]이 출금액[800]보다 적으므로 검증 로직을 통과하지 못한다. 따라서 검증 실패이다. `return false` 가 호출된다.
+이때 `finally` 구문이 있으므로 `finally` 구문으로 이동한다.
+
+
+
+`t2` : `lock.unlock()` 을 호출해서 락을 반납하고, 대기 큐의 스레드를 하나 깨우려고 시도한다. 대기 큐에 스레 드가 없으므로 이때는 깨우지 않는다.
+
+
+**참고**: `volatile` 를 사용하지 않아도 `Lock` 을 사용할 때 접근하는 변수의 메모리 가시성 문제는 해결된다. (이전에 학
+습한 자바 메모리 모델 참고)
