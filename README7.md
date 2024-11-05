@@ -293,6 +293,7 @@ public class BoundedMain {
 
 ### **생산자 스레드 실행 시작**
 
+<img width="694" alt="Screenshot 2024-11-05 at 23 00 55" src="https://github.com/user-attachments/assets/40a97be9-6c31-48fb-8bc4-d9a1a43b1227">
 
 ```shell
 23:05:54.410 [     main] == [생산자 먼저 실행] 시작, BoundedQueueV1 ==
@@ -301,25 +302,31 @@ public class BoundedMain {
 23:05:54.419 [producer1] [생산 시도] data1 -> []
 ```
 
+<img width="698" alt="Screenshot 2024-11-05 at 23 01 02" src="https://github.com/user-attachments/assets/72ba38c5-3dac-48aa-94a7-f13ccd4dc5ec">
 
 ```shell
 23:05:54.419 [producer1] [생산 완료] data1 -> [data1]
 ```
 
+<img width="689" alt="Screenshot 2024-11-05 at 23 01 34" src="https://github.com/user-attachments/assets/594a2c4b-49b7-4362-9708-fb8676eb01ff">
 
 ```shell
 23:05:54.520 [producer2] [생산 시도] data2 -> [data1]
 ```
 
+<img width="684" alt="Screenshot 2024-11-05 at 23 01 37" src="https://github.com/user-attachments/assets/766c2fe5-1e44-46a7-bb74-fdd08f3a7c84">
+
 ```shell
 23:05:54.520 [producer2] [생산 완료] data2 -> [data1, data2]
 ```
+<img width="695" alt="Screenshot 2024-11-05 at 23 01 42" src="https://github.com/user-attachments/assets/42d2c569-2186-4f08-bd23-c823d34d8d6d">
 
 ```shell
 23:05:54.626 [producer3] [생산 시도] data3 -> [data1, data2]
 23:05:54.626 [producer3] [put] 큐가 가득 참, 버림 : data3
 ```
 
+<img width="699" alt="Screenshot 2024-11-05 at 23 01 45" src="https://github.com/user-attachments/assets/2f2ecfff-b84e-4424-8945-222e13cedacf">
 
 ```shell
 23:05:54.627 [producer3] [생산 완료] data3 -> [data1, data2]
@@ -327,7 +334,7 @@ public class BoundedMain {
 
 ### **생산자 스레드 실행 완료**
 
-
+<img width="680" alt="Screenshot 2024-11-05 at 23 01 50" src="https://github.com/user-attachments/assets/63314dc7-6476-4dd8-99fa-cff87cb9dfc2">
 
 ```shell
 22:53:16.330 [     main] 현재 상태 출력, 큐 데이터: []
