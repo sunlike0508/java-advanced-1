@@ -208,6 +208,39 @@ public class BoundedMain {
 참고로 여기서는 이해를 돕기 위해 이렇게 순서대로 실행했다. 실제로는 동시에 실행될 것이다.
 
 ```shell
+23:05:54.410 [     main] == [생산자 먼저 실행] 시작, BoundedQueueV1 ==
+
+23:05:54.412 [     main] 생산자 시작
+23:05:54.419 [producer1] [생산 시도] data1 -> []
+23:05:54.419 [producer1] [생산 완료] data1 -> [data1]
+23:05:54.520 [producer2] [생산 시도] data2 -> [data1]
+23:05:54.520 [producer2] [생산 완료] data2 -> [data1, data2]
+23:05:54.626 [producer3] [생산 시도] data3 -> [data1, data2]
+23:05:54.626 [producer3] [put] 큐가 가득 참, 버림 : data3
+23:05:54.627 [producer3] [생산 완료] data3 -> [data1, data2]
+
+23:05:54.727 [     main] 현재 상태 출력, 큐 데이터: [data1, data2]
+23:05:54.727 [     main] producer1: TERMINATED
+23:05:54.727 [     main] producer2: TERMINATED
+23:05:54.727 [     main] producer3: TERMINATED
+
+23:05:54.728 [     main] 소비자 시작
+23:05:54.728 [consumer1] [소비 시도]     ? <- [data1, data2]
+23:05:54.729 [consumer1] [소비 완료] data1 <- [data2]
+23:05:54.833 [consumer2] [소비 시도]     ? <- [data2]
+23:05:54.833 [consumer2] [소비 완료] data2 <- []
+23:05:54.938 [consumer3] [소비 시도]     ? <- []
+23:05:54.938 [consumer3] [소비 완료] null <- []
+
+23:05:55.043 [     main] 현재 상태 출력, 큐 데이터: []
+23:05:55.043 [     main] producer1: TERMINATED
+23:05:55.043 [     main] producer2: TERMINATED
+23:05:55.043 [     main] producer3: TERMINATED
+23:05:55.043 [     main] consumer1: TERMINATED
+23:05:55.043 [     main] consumer2: TERMINATED
+23:05:55.043 [     main] consumer3: TERMINATED
+23:05:55.044 [     main] == [생산자 먼저 실행] 종료, BoundedQueueV1 ==
+
 22:53:16.011 [     main] == [소비자 먼저 실행] 시작, BoundedQueueV1 ==
 
 22:53:16.013 [     main] 소비자 시작
@@ -248,20 +281,60 @@ public class BoundedMain {
 
 
 
+`p1` : `producer1` 생산자 스레드를 뜻한다.
+
+`c1` : `consumer1` 소비자 스레드를 뜻한다.
+
+임계 영역은 `synchronized` 를 영역을 뜻한다. 
+
+스레드가 이 영역에 들어가려면 모니터 락( `lock` )이 필요하다. 설명을 단순화 하기 위해`BoundedQueue` 의 버전 정보는 생략한다.
+
+스레드가 처음부터 모두 생성되어 있는 것은 아니지만, 모두 그려두고 시작하겠다.
+
+### **생산자 스레드 실행 시작**
+
+
+```shell
+23:05:54.410 [     main] == [생산자 먼저 실행] 시작, BoundedQueueV1 ==
+
+23:05:54.412 [     main] 생산자 시작
+23:05:54.419 [producer1] [생산 시도] data1 -> []
+```
+
+
+```shell
+23:05:54.419 [producer1] [생산 완료] data1 -> [data1]
+```
+
+
+```shell
+23:05:54.520 [producer2] [생산 시도] data2 -> [data1]
+```
+
+```shell
+23:05:54.520 [producer2] [생산 완료] data2 -> [data1, data2]
+```
+
+```shell
+23:05:54.626 [producer3] [생산 시도] data3 -> [data1, data2]
+23:05:54.626 [producer3] [put] 큐가 가득 참, 버림 : data3
+```
+
+
+```shell
+23:05:54.627 [producer3] [생산 완료] data3 -> [data1, data2]
+```
+
+### **생산자 스레드 실행 완료**
 
 
 
-
-
-
-
-
-
-
-
-
-
-
+```shell
+22:53:16.330 [     main] 현재 상태 출력, 큐 데이터: []
+22:53:16.330 [     main] consumer1: TERMINATED
+22:53:16.330 [     main] consumer2: TERMINATED
+22:53:16.330 [     main] consumer3: TERMINATED
+```
 
 
 

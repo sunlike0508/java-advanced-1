@@ -11,8 +11,8 @@ public class BoundedMain {
         BoundedQueue queue = new BoundedQueueV1(2);
 
         // 둘 중에 하나만 실행해야 함
-        //producerFirst(queue); // 생산자 먼저 실행
-        consumerFirst(queue); // 소비자 먼저 실행
+        producerFirst(queue); // 생산자 먼저 실행
+        //consumerFirst(queue); // 소비자 먼저 실행
     }
 
 
