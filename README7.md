@@ -327,6 +327,22 @@ public class BoundedMain {
 23:05:54.626 [producer3] [put] 큐가 가득 참, 버림 : data3
 ```
 
+`p3` 는 `data3` 을 큐에 저장하려고 시도한다.
+
+하지만 큐가 가득 차 있기 때문에 더는 큐에 데이터를 추가할 수 없다. 따라서 `put()` 내부에서 `data3` 은 버린다.
+
+**데이터를 버리지 않는 대안**
+
+`data3` 을 버리지 않는 대안은, 큐에 빈 공간이 생길 때 까지 `p3` 스레드가 기다리는 것이다. 
+
+언젠가는 소비자 스레드가 실행되어서 큐의 데이터를 가져갈 것이고, 큐에 빈 공간이 생기게 된다. 이때 큐에 데이터를 보관하는 것이다.
+
+그럼 어떻게 기다릴 수 있을까?
+
+단순하게 생각하면 생산자 스레드가 반복문을 사용해서 큐에 빈 공간이 생기는지 주기적으로 체크한 다음에, 만약 빈 공 간이 없다면 `sleep()` 을 짧게 사용해서 잠시 대기하고, 깨어난 다음에 다시 반복문에서 큐의 빈 공간을 체크하는 식으 로 구현하면 될 것 같다.
+
+이후에 `BoundedQueueV2` 에서 이 방식으로 개선해보자.
+
 <img width="680" alt="Screenshot 2024-11-05 at 23 01 50" src="https://github.com/user-attachments/assets/63314dc7-6476-4dd8-99fa-cff87cb9dfc2">
 
 ```shell
@@ -344,7 +360,9 @@ public class BoundedMain {
 22:53:16.330 [     main] consumer3: TERMINATED
 ```
 
+### **소비자 스레드 실행 시작**
 
+<img width="684" alt="Screenshot 2024-11-05 at 23 02 01" src="https://github.com/user-attachments/assets/b7a71e0f-86d7-4332-83ca-d15b2af25d7a">
 
 
 
