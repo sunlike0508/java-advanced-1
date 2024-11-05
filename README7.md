@@ -369,17 +369,25 @@ public class BoundedMain {
 23:05:54.728 [consumer1] [소비 시도]     ? <- [data1, data2]
 ```
 
+<img width="674" alt="Screenshot 2024-11-05 at 23 02 10" src="https://github.com/user-attachments/assets/6bd79a62-5a03-4dc5-817a-8e89530e3daf">
+
 ```shell
 23:05:54.729 [consumer1] [소비 완료] data1 <- [data2]
 ```
+
+<img width="677" alt="Screenshot 2024-11-05 at 23 03 05" src="https://github.com/user-attachments/assets/58932973-720f-495b-8243-c2ce8d82c69e">
 
 ```shell
 23:05:54.833 [consumer2] [소비 시도]     ? <- [data2]
 ```
 
+<img width="686" alt="Screenshot 2024-11-05 at 23 03 11" src="https://github.com/user-attachments/assets/c8308ae4-fe75-4a1c-9d3d-9a68abaade81">
+
 ```shell
 23:05:54.833 [consumer2] [소비 완료] data2 <- []
 ```
+
+<img width="683" alt="Screenshot 2024-11-05 at 23 03 17" src="https://github.com/user-attachments/assets/aaa27de0-1f43-47fc-a00b-bd27aae3741c">
 
 ```shell
 23:05:54.938 [consumer3] [소비 시도]     ? <- []
@@ -409,13 +417,15 @@ public class BoundedMain {
 
 한정된 버퍼(Bounded buffer) 문제는 이렇듯 버퍼에 데이터가 가득 찬 상황에 데이터를 생산해서 추가할 때도 문제가 발생하고, 큐에 데이터가 없는데 데이터를 소비할 때도 문제가 발생한다.
 
-
+<img width="684" alt="Screenshot 2024-11-05 at 23 03 27" src="https://github.com/user-attachments/assets/80d50983-fe50-433b-b126-70b2eb5eeb9f">
 
 ```shell
 23:05:54.938 [consumer3] [소비 완료] null <- []
 ```
 
 ### **소비자 스레드 실행 완료**
+
+<img width="697" alt="Screenshot 2024-11-05 at 23 03 38" src="https://github.com/user-attachments/assets/6f66ea67-bb91-4abb-a4db-4e33e110297a">
 
 ```shell
 23:05:55.043 [     main] 현재 상태 출력, 큐 데이터: []
