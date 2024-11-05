@@ -11,3 +11,5 @@
 [문제](https://github.com/sunlike0508/java-advanced-1/blob/main/README5.md)
 
 [고급 동기화 - concurrent.Lock](https://github.com/sunlike0508/java-advanced-1/blob/main/README6.md)
+
+[생산자와 소비자 문제1](https://github.com/sunlike0508/java-advanced-1/blob/main/README7.md)
