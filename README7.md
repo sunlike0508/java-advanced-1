@@ -444,18 +444,22 @@ public class BoundedMain {
 
 스레드가 대기하며 기다릴 수 있다면 `p3` 가 생산한 `data3` 을 `c3` 가 받을 수도 있었을 것이다.
 
-## 
+## 소비자 우선
 
 ### **실행 전**
 
+<img width="474" alt="Screenshot 2024-11-06 at 22 09 37" src="https://github.com/user-attachments/assets/256db181-bb06-4d3e-b2b8-9c7d8c742525">
+
 ### **소비자 스레드 실행 시작**
+
+<img width="458" alt="Screenshot 2024-11-06 at 22 11 38" src="https://github.com/user-attachments/assets/09f60e74-3bee-40e2-8660-2163af491153">
 
 ```shell
 22:53:16.013 [     main] 소비자 시작
 22:53:16.016 [consumer1] [소비 시도]     ? <- []
 ```
 
-
+<img width="464" alt="Screenshot 2024-11-06 at 22 11 51" src="https://github.com/user-attachments/assets/301f68d5-52a4-413d-97ef-0ae5a726a5c2">
 
 ```shell
 22:53:16.018 [consumer1] [소비 완료] null <- []
@@ -463,6 +467,7 @@ public class BoundedMain {
 
 ### **소비자 스레드 실행 완료**
 
+<img width="465" alt="Screenshot 2024-11-06 at 22 11 55" src="https://github.com/user-attachments/assets/e1131b7c-88f6-4952-9317-a18db5fc164a">
 
 ```shell
 22:53:16.121 [consumer2] [소비 시도]     ? <- []
@@ -477,40 +482,47 @@ public class BoundedMain {
 
 ### **생산자 스레드 실행 시작**
 
+<img width="463" alt="Screenshot 2024-11-06 at 22 12 00" src="https://github.com/user-attachments/assets/c8eb453e-faa6-4aed-9b42-c9ec788cb383">
+
 ```shell
 22:53:16.330 [     main] 생산자 시작
 22:53:16.331 [producer1] [생산 시도] data1 -> []
 ```
 
-
-
+<img width="467" alt="Screenshot 2024-11-06 at 22 12 07" src="https://github.com/user-attachments/assets/2a4a702e-d228-4438-98b8-d7c5d2ff9b9c">
 
 ```shell
 22:53:16.332 [producer1] [생산 완료] data1 -> [data1]
 ```
 
+<img width="467" alt="Screenshot 2024-11-06 at 22 12 23" src="https://github.com/user-attachments/assets/e260ef5d-5e3e-4773-a521-6b4c3748f0d3">
 
 ```shell
 22:53:16.436 [producer2] [생산 시도] data2 -> [data1]
 ```
 
+<img width="458" alt="Screenshot 2024-11-06 at 22 12 29" src="https://github.com/user-attachments/assets/29c9ae1f-222b-4040-a8a6-9d6005ad2587">
+
 ```shell
 22:53:16.436 [producer2] [생산 완료] data2 -> [data1, data2]
 ```
 
+<img width="475" alt="Screenshot 2024-11-06 at 22 12 32" src="https://github.com/user-attachments/assets/2f68ff94-aaea-406d-94e9-0d676a2efb48">
 
 ```shell
 22:53:16.541 [producer3] [생산 시도] data3 -> [data1, data2]
 22:53:16.541 [producer3] [put] 큐가 가득 참, 버림 : data3
 ```
 
+<img width="456" alt="Screenshot 2024-11-06 at 22 12 37" src="https://github.com/user-attachments/assets/9621dfca-ea2e-43fd-a86c-9f80b77f77b2">
 
 ```shell
 22:53:16.542 [producer3] [생산 완료] data3 -> [data1, data2]
 ```
 
-
 ### **생산자 스레드 실행 완료**
+
+<img width="459" alt="Screenshot 2024-11-06 at 22 12 50" src="https://github.com/user-attachments/assets/ee794268-376d-49da-8c3b-b10fad5aeea1">
 
 ```shell
 22:53:16.641 [     main] 현재 상태 출력, 큐 데이터: [data1, data2]
