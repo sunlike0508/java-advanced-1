@@ -726,9 +726,11 @@ public class BoundedQueueV2 implements BoundedQueue {
 
 **실행 결과 - BoundedQueueV2, 생산자 먼저 실행**
 
-
+<img width="465" alt="Screenshot 2024-11-06 at 22 58 31" src="https://github.com/user-attachments/assets/9126f1a4-15a7-4478-b6ae-cc5e60e5f9f7">
 
 **생산자 스레드 실행 시작**
+
+<img width="467" alt="Screenshot 2024-11-06 at 23 03 15" src="https://github.com/user-attachments/assets/56f2074c-789f-40fc-a733-893cf6331390">
 
 ```shell
 22:34:38.795 [     main] == [생산자 먼저 실행] 시작, BoundedQueueV2 ==
@@ -736,21 +738,25 @@ public class BoundedQueueV2 implements BoundedQueue {
 22:34:38.796 [     main] 생산자 시작
 22:34:38.803 [producer1] [생산 시도] data1 -> []
 ```
+<img width="468" alt="Screenshot 2024-11-06 at 23 03 19" src="https://github.com/user-attachments/assets/19981801-36b2-4ca0-b495-86e6fc62c865">
 
 
 ```shell
 22:34:38.803 [producer1] [생산 완료] data1 -> [data1]
 ```
+<img width="465" alt="Screenshot 2024-11-06 at 23 03 24" src="https://github.com/user-attachments/assets/d1bc2900-ee1c-4c3a-a462-978cd58d933c">
 
 
 ```shell
 22:34:38.904 [producer2] [생산 시도] data2 -> [data1]
 ```
 
+<img width="466" alt="Screenshot 2024-11-06 at 23 03 27" src="https://github.com/user-attachments/assets/19dce6ac-a5df-45b6-8ec3-99b09595ab26">
 
 ```shell
 22:34:38.904 [producer2] [생산 완료] data2 -> [data1, data2]
 ```
+<img width="464" alt="Screenshot 2024-11-06 at 23 03 32" src="https://github.com/user-attachments/assets/b71614c7-0ea3-4109-bdc9-18cd68dd0e1e">
 
 ```shell
 22:34:39.009 [producer3] [생산 시도] data3 -> [data1, data2]
@@ -782,6 +788,7 @@ public class BoundedQueueV2 implements BoundedQueue {
 
 **소비자 스레드 실행 시작**
 
+<img width="467" alt="Screenshot 2024-11-06 at 23 03 37" src="https://github.com/user-attachments/assets/c856ba29-8d19-4008-a992-d845ef62da2a">
 
 ```shell
 22:34:39.115 [     main] 소비자 시작
@@ -789,14 +796,17 @@ public class BoundedQueueV2 implements BoundedQueue {
 ```
 
 
+<img width="464" alt="Screenshot 2024-11-06 at 23 03 42" src="https://github.com/user-attachments/assets/b17aa19a-2789-4682-a385-612b4605dade">
 
 ```shell
 22:34:39.218 [consumer2] [소비 시도]     ? <- [data1, data2]
 ```
+<img width="469" alt="Screenshot 2024-11-06 at 23 03 46" src="https://github.com/user-attachments/assets/7164f761-a1f9-4d77-a480-51aea75263af">
 
 ```shell
 22:34:39.323 [consumer3] [소비 시도]     ? <- [data1, data2]
 ```
+<img width="474" alt="Screenshot 2024-11-06 at 23 03 50" src="https://github.com/user-attachments/assets/969c1c22-79ca-4d73-9156-c1475751f24e">
 
 ```shell
 
