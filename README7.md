@@ -480,6 +480,13 @@ public class BoundedMain {
 22:53:16.330 [     main] consumer3: TERMINATED
 ```
 
+큐에 데이터가 없으므로 `null` 을 반환한다. 
+
+결과적으로 `c1` , `c2` , `c3` 모두 데이터를 받지 못하고 종료된다.
+
+언젠가 생산자가 데이터를 넣어준다고 가정해보면 `c1` , `c2` , `c3` 스레드는 큐에 데이터가 추가될 때 까지 기다리는 것도 방법이다. (이 부분은 뒤에서 구현한다.)
+
+
 ### **생산자 스레드 실행 시작**
 
 <img width="463" alt="Screenshot 2024-11-06 at 22 12 00" src="https://github.com/user-attachments/assets/c8eb453e-faa6-4aed-9b42-c9ec788cb383">
@@ -513,6 +520,10 @@ public class BoundedMain {
 22:53:16.541 [producer3] [생산 시도] data3 -> [data1, data2]
 22:53:16.541 [producer3] [put] 큐가 가득 참, 버림 : data3
 ```
+
+`p3` 의 경우 큐에 데이터가 가득 차서 `data3` 을 포기하고 버린다.
+
+소비자가 계속해서 큐의 데이터를 가져간다고 가정하면, `p3` 스레드는 기다리는 것도 하나의 방법이다.
 
 <img width="456" alt="Screenshot 2024-11-06 at 22 12 37" src="https://github.com/user-attachments/assets/9621dfca-ea2e-43fd-a86c-9f80b77f77b2">
 
@@ -556,17 +567,159 @@ public class BoundedMain {
 
 앞서 설명한 것처럼 스레드가 기다리면 되는 것이다! 그럼 기다리도록 구현해보자.
 
+## 생산자 소비자 문제 - 예제2 코드
+
+이번에는 각 상황에 맞추어 스레드가 기다리도록 해보자.
+
+```java
+public class BoundedQueueV2 implements BoundedQueue {
+
+    private final Queue<String> queue = new ArrayDeque<>();
+    private final int max;
 
 
+    public BoundedQueueV2(int max) {this.max = max;}
 
 
+    @Override
+    public synchronized void put(String data) {
+        while(queue.size() == max) {
+            log("[put] 큐가 가득 참, 생산자 대기");
+            sleep(1000);
+        }
+
+        queue.offer(data);
+    }
 
 
+    @Override
+    public synchronized String take() {
+        while(queue.isEmpty()) {
+            log("[take] 큐에 데이터가 없음, 소비자 대기");
+            sleep(1000);
+        }
+        return queue.poll();
+    }
 
 
+    @Override
+    public String toString() {
+        return queue.toString();
+    }
+}
+```
+
+**put(data) - 데이터를 버리지 않는 대안**
+
+`data3` 을 버리지 않는 대안은, 큐가 가득 찾을 때, 큐에 빈 공간이 생길 때 까지, 생산자 스레드가 기다리면 된다. 
+
+언젠가는 소비자 스레드가 실행되어서 큐의 데이터를 가져갈 것이고, 그러면 큐에 데이터를 넣을 수 있는 공간이 생기게 된다.
+
+그럼 어떻게 기다릴 수 있을까?
+
+여기서는 생산자 스레드가 반복문을 사용해서 큐에 빈 공간이 생기는지 주기적으로 체크한다. 만약 빈 공간이 없다면 `sleep()` 을 사용해서 잠시 대기하고, 깨어난 다음에 다시 반복문에서 큐의 빈 공간을 체크하는 식으로 구현했다.
+
+**take() - 큐에 데이터가 없다면 기다리자**
+
+소비자 입장에서 큐에 데이터가 없다면 기다리는 것도 대안이다.
+
+큐에 데이터가 없을때 `null` 을 받지 않는 대안은,큐에 데이터가 추가될 때까지 소비자 스레드가 기다리는 것이다. 언젠가는 생산자 스레드가 실행되어서 큐의 데이터를 추가할 것이고, 큐에 데이터가 생기게 된다. 
+
+물론 생산자 스레드가 계속해서 데이터를 생산한다는 가정이 필요하다.
+
+그럼 어떻게 기다릴 수 있을까?
+
+여기서는 소비자 스레드가 반복문을 사용해서 큐에 데이터가 있는지 주기적으로 체크한 다음에, 만약 데이터가 없다면 `sleep()` 을 사용해서 잠시 대기하고, 깨어난 다음에 다시 반복문에서 큐에 데이터가 있는지 체크하는 식으로 구현했다.
+
+```shell
+22:34:38.795 [     main] == [생산자 먼저 실행] 시작, BoundedQueueV2 ==
+
+22:34:38.796 [     main] 생산자 시작
+22:34:38.803 [producer1] [생산 시도] data1 -> []
+22:34:38.803 [producer1] [생산 완료] data1 -> [data1]
+22:34:38.904 [producer2] [생산 시도] data2 -> [data1]
+22:34:38.904 [producer2] [생산 완료] data2 -> [data1, data2]
+22:34:39.009 [producer3] [생산 시도] data3 -> [data1, data2]
+22:34:39.010 [producer3] [put] 큐가 가득 참, 생산자 대기
+
+22:34:39.114 [     main] 현재 상태 출력, 큐 데이터: [data1, data2]
+22:34:39.115 [     main] producer1: TERMINATED
+22:34:39.115 [     main] producer2: TERMINATED
+22:34:39.115 [     main] producer3: TIMED_WAITING
+
+22:34:39.115 [     main] 소비자 시작
+22:34:39.116 [consumer1] [소비 시도]     ? <- [data1, data2]
+22:34:39.218 [consumer2] [소비 시도]     ? <- [data1, data2]
+22:34:39.323 [consumer3] [소비 시도]     ? <- [data1, data2]
+
+22:34:39.429 [     main] 현재 상태 출력, 큐 데이터: [data1, data2]
+22:34:39.429 [     main] producer1: TERMINATED
+22:34:39.429 [     main] producer2: TERMINATED
+22:34:39.429 [     main] producer3: TIMED_WAITING
+22:34:39.429 [     main] consumer1: BLOCKED
+22:34:39.429 [     main] consumer2: BLOCKED
+22:34:39.430 [     main] consumer3: BLOCKED
+22:34:39.430 [     main] == [생산자 먼저 실행] 종료, BoundedQueueV2 ==
+22:34:40.015 [producer3] [put] 큐가 가득 참, 생산자 대기
+22:34:41.021 [producer3] [put] 큐가 가득 참, 생산자 대기
+22:34:42.022 [producer3] [put] 큐가 가득 참, 생산자 대기
+22:34:43.027 [producer3] [put] 큐가 가득 참, 생산자 대기
+```
+**문제 - 생산자 먼저 실행의 경우**
+
+`producer3` 이 종료되지 않고 계속 수행되고, `consumer1` , `consumer2` , `consumer3` 은 `BLOCKED` 상태가 된다.
+
+**참고**: 만약 실행 결과가 지금 내용과 다르고 특히 "현재 상태 출력"과 그 이후 부분이 나오지 않는다면 `toString()` 에 있는 `synchronized` 를 제거해야 한다. 
+
+원칙적으로 `toString()` 에도 `synchronized` 를 적용해야 한다. 
+
+그래야 `toString()` 을 통한 조회 시점에도 모니터 락이 걸리며 정확한 데이터를 조회할 수 있다. 
+
+하지만 이 부분이 이번 설명의 핵심이 아니고, 또 예제 코드를 단순하게 유지하기 위해 여기서는 `toString()` 에 `synchronized` 를 사용하지 않겠다. 
+
+왜 결과에 차이가 나는지는 이후에 설명하는 내용을 들어보면 자연스럽게 이해가 될 것이다.
+
+```shell
+22:39:11.126 [     main] == [소비자 먼저 실행] 시작, BoundedQueueV2 ==
+
+22:39:11.129 [     main] 소비자 시작
+22:39:11.133 [consumer1] [소비 시도]     ? <- []
+22:39:11.134 [consumer1] [take] 큐에 데이터가 없음, 소비자 대기
+22:39:11.239 [consumer2] [소비 시도]     ? <- []
+22:39:11.345 [consumer3] [소비 시도]     ? <- []
+
+22:39:11.450 [     main] 현재 상태 출력, 큐 데이터: []
+22:39:11.450 [     main] consumer1: TIMED_WAITING
+22:39:11.451 [     main] consumer2: BLOCKED
+22:39:11.451 [     main] consumer3: BLOCKED
+
+22:39:11.451 [     main] 생산자 시작
+22:39:11.452 [producer1] [생산 시도] data1 -> []
+22:39:11.557 [producer2] [생산 시도] data2 -> []
+22:39:11.662 [producer3] [생산 시도] data3 -> []
+
+22:39:11.767 [     main] 현재 상태 출력, 큐 데이터: []
+22:39:11.767 [     main] consumer1: TIMED_WAITING
+22:39:11.768 [     main] consumer2: BLOCKED
+22:39:11.768 [     main] consumer3: BLOCKED
+22:39:11.768 [     main] producer1: BLOCKED
+22:39:11.768 [     main] producer2: BLOCKED
+22:39:11.768 [     main] producer3: BLOCKED
+22:39:11.769 [     main] == [소비자 먼저 실행] 종료, BoundedQueueV2 ==
+22:39:12.139 [consumer1] [take] 큐에 데이터가 없음, 소비자 대기
+22:39:13.145 [consumer1] [take] 큐에 데이터가 없음, 소비자 대기
+22:39:14.150 [consumer1] [take] 큐에 데이터가 없음, 소비자 대기
+22:39:15.155 [consumer1] [take] 큐에 데이터가 없음, 소비자 대기
+```
 
 
+**문제 - 소비자 먼저 실행의 경우**
 
+소비자 먼저 실행의 경우 `consumer1` 이 종료되지 않고 계속 수행된다. 
+
+그리고 나머지 모든 스레드가 `BLOCKED` 상태가 된다.
+
+세상이 뭔가 멈춘 것 같다! 왜 이런 문제가 발생했을까? 먼저 잠깐의 시간동안 스스로 원인을 생각해보자.
 
 
 
