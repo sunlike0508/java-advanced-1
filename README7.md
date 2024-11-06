@@ -712,7 +712,6 @@ public class BoundedQueueV2 implements BoundedQueue {
 22:39:15.155 [consumer1] [take] 큐에 데이터가 없음, 소비자 대기
 ```
 
-
 **문제 - 소비자 먼저 실행의 경우**
 
 소비자 먼저 실행의 경우 `consumer1` 이 종료되지 않고 계속 수행된다. 
@@ -721,9 +720,115 @@ public class BoundedQueueV2 implements BoundedQueue {
 
 세상이 뭔가 멈춘 것 같다! 왜 이런 문제가 발생했을까? 먼저 잠깐의 시간동안 스스로 원인을 생각해보자.
 
+## 생산자 소비자 문제 - 예제2 분석
+
+### BoundedQueueV2 - 생산자 먼저 실행 분석
+
+**실행 결과 - BoundedQueueV2, 생산자 먼저 실행**
 
 
 
+**생산자 스레드 실행 시작**
+
+```shell
+22:34:38.795 [     main] == [생산자 먼저 실행] 시작, BoundedQueueV2 ==
+
+22:34:38.796 [     main] 생산자 시작
+22:34:38.803 [producer1] [생산 시도] data1 -> []
+```
 
 
+```shell
+22:34:38.803 [producer1] [생산 완료] data1 -> [data1]
+```
+
+
+```shell
+22:34:38.904 [producer2] [생산 시도] data2 -> [data1]
+```
+
+
+```shell
+22:34:38.904 [producer2] [생산 완료] data2 -> [data1, data2]
+```
+
+```shell
+22:34:39.009 [producer3] [생산 시도] data3 -> [data1, data2]
+22:34:39.010 [producer3] [put] 큐가 가득 참, 생산자 대기
+```
+
+생산자 스레드인 `p3` 는 임계 영역에 들어가기 위해 먼저 락을 획득한다. 큐에 `data3` 을 저장하려고 시도한다.
+
+그런데 큐가 가득 차있다.
+
+`p3` 는 `sleep(1000)` 을사용해서잠시대기한다.이때 `RUNNABLE` `TIMED_WAITING` 상태가된다.
+
+이때 반복문을 사용해서 1초마다 큐에 빈 자리가 있는지 반복해서 확인한다.
+
+빈 자리가 있다면 큐에 데이터를 입력하고 완료된다.
+
+빈 자리가 없다면 `sleep()` 으로 잠시 대기한 다음 반복문을 계속해서 수행한다.
+
+1초마다 한 번씩 체크하 기 때문에 "큐가 가득 참, 생산자 대기"라는 메시지가 계속 출력될 것이다.
+
+**여기서 핵심은 `p3` 스레드가 락을 가지고 있는 상태에서, 큐에 빈 자리가 나올 때 까지 대기한다는 점이다.**
+
+```shell
+22:34:39.114 [     main] 현재 상태 출력, 큐 데이터: [data1, data2]
+22:34:39.115 [     main] producer1: TERMINATED
+22:34:39.115 [     main] producer2: TERMINATED
+22:34:39.115 [     main] producer3: TIMED_WAITING
+```
+
+**소비자 스레드 실행 시작**
+
+
+```shell
+22:34:39.115 [     main] 소비자 시작
+22:34:39.116 [consumer1] [소비 시도]     ? <- [data1, data2]
+```
+
+
+
+```shell
+22:34:39.218 [consumer2] [소비 시도]     ? <- [data1, data2]
+```
+
+```shell
+22:34:39.323 [consumer3] [소비 시도]     ? <- [data1, data2]
+```
+
+```shell
+
+22:34:39.429 [     main] 현재 상태 출력, 큐 데이터: [data1, data2]
+22:34:39.429 [     main] producer1: TERMINATED
+22:34:39.429 [     main] producer2: TERMINATED
+22:34:39.429 [     main] producer3: TIMED_WAITING
+22:34:39.429 [     main] consumer1: BLOCKED
+22:34:39.429 [     main] consumer2: BLOCKED
+22:34:39.430 [     main] consumer3: BLOCKED
+22:34:39.430 [     main] == [생산자 먼저 실행] 종료, BoundedQueueV2 ==
+22:34:40.015 [producer3] [put] 큐가 가득 참, 생산자 대기
+22:34:41.021 [producer3] [put] 큐가 가득 참, 생산자 대기
+22:34:42.022 [producer3] [put] 큐가 가득 참, 생산자 대기
+22:34:43.027 [producer3] [put] 큐가 가득 참, 생산자 대기
+```
+
+결과적으로 `c1` , `c2` , `c3` 는 모두 락을 획득하기 위해 `BLOCKED` 상태로 대기한다.
+
+`p3` 는 1초마다 한 번씩 깨어나서 큐의 상태를 확인한다. 
+
+그런데 본인이 락을 가지고 있기 때문에 다른 스레드가 임계 영역 안에 들어오는 것이 불가능하다. 
+
+따라서 다른 스레드는 임계 영역 안에 있는 큐에 접근조차 할 수 없다.
+
+결국 `p3` 는 절대로 비워지지 않는 큐를 계속 확인하게된다.
+
+그리고 `[put] 큐가 가득 참, 생산자 대기` 를 1초마다 계속 출력한다.
+
+결국 이런 상태가 무한하게 지속된다.
+
+### BoundedQueueV2 - 소비자 먼저 실행 분석 
+
+**실행 결과 - BoundedQueueV2, 소비자 먼저 실행**
 
