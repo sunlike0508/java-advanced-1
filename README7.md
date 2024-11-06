@@ -872,6 +872,7 @@ public class BoundedQueueV2 implements BoundedQueue {
 
 **실행 결과 - BoundedQueueV2, 소비자 먼저 실행**
 
+<img width="477" alt="Screenshot 2024-11-06 at 23 24 01" src="https://github.com/user-attachments/assets/b56a79e9-8678-4922-91bc-68b9c1ef4336">
 
 **소비자 스레드 실행 시작**
 
@@ -899,7 +900,7 @@ public class BoundedQueueV2 implements BoundedQueue {
 
 1초마다 한 번 "큐에 데이터가 없음, 소비자 대기"라는 메시 지가 출력될 것이다.
 
-
+<img width="462" alt="Screenshot 2024-11-06 at 23 24 04" src="https://github.com/user-attachments/assets/c191c0bd-ec7f-43e3-a73b-cc564774f7a5">
 
 ```shell
 22:39:11.239 [consumer2] [소비 시도]     ? <- []
@@ -926,6 +927,8 @@ public class BoundedQueueV2 implements BoundedQueue {
 `c1` 이 락을 반납하지 않기 때문에 `c2` , `c3` 는 `BLOCKED` 상태가 된다.
 
 **생산자 스레드 실행 시작**
+
+<img width="484" alt="Screenshot 2024-11-06 at 23 24 43" src="https://github.com/user-attachments/assets/58eb87ab-ba85-4d29-8c25-26762c6af058">
 
 ```shell
 22:39:11.451 [     main] 생산자 시작
@@ -958,6 +961,8 @@ public class BoundedQueueV2 implements BoundedQueue {
 그런데 `c1` 이 락을 가지고 임계영역 안에 있기 때문에, 임계영역 밖의 `p1` 은 락을 획득할 수 없으므로, 큐에 접근하지 못하고 무한 대기한다.
 
 결과적으로 생산자 스레드인 `p1` 은 `c1` 이 락을 반납할 때 까지 `BLOCKED` 상태로 대기한다.
+
+<img width="480" alt="Screenshot 2024-11-06 at 23 25 56" src="https://github.com/user-attachments/assets/a28ea39e-6fbc-4a37-9bd8-7d8789cfef00">
 
 ```shell
 22:39:11.767 [     main] 현재 상태 출력, 큐 데이터: []
