@@ -1430,22 +1430,27 @@ public class BoundedQueueV3 implements BoundedQueue {
 
 **소비자 스레드 실행 시작**
 
+<img width="466" alt="Screenshot 2024-11-10 at 21 43 46" src="https://github.com/user-attachments/assets/1379e207-9c73-47c2-b85c-c81e3f74a4aa">
+
 ```shell
 20:55:19.903 [     main] == [소비자 먼저 실행] 시작, BoundedQueueV3 ==
 
 20:55:19.905 [     main] 소비자 시작
 ```
 
+<img width="473" alt="Screenshot 2024-11-10 at 21 43 50" src="https://github.com/user-attachments/assets/ec2f947e-e690-44b5-a9ad-93c163be4da5">
 
 ```shell
 20:55:19.908 [consumer1] [소비 시도]     ? <- []
 20:55:19.908 [consumer1] [take] 큐에 데이터가 없음, 소비자 대기
 ```
 
+<img width="462" alt="Screenshot 2024-11-10 at 21 43 55" src="https://github.com/user-attachments/assets/7fdcbcac-3e56-4861-9a9f-4b9210199cea">
+<img width="471" alt="Screenshot 2024-11-10 at 21 43 58" src="https://github.com/user-attachments/assets/25a7cc6a-e432-4f58-b220-b98685bc28a8">
+
 **소비자 스레드 실행 완료**
 
-
-
+<img width="468" alt="Screenshot 2024-11-10 at 21 44 03" src="https://github.com/user-attachments/assets/4a49daae-9994-46a0-8d54-efecf4ff1eb7">
 
 ```shell
 20:55:20.013 [consumer2] [소비 시도]     ? <- []
@@ -1467,8 +1472,7 @@ public class BoundedQueueV3 implements BoundedQueue {
 
 **생산자 스레드 실행 시작**
 
-
-
+<img width="461" alt="Screenshot 2024-11-10 at 21 46 52" src="https://github.com/user-attachments/assets/dd19dd69-4b5c-46d4-87f5-cb755ecb8bab">
 
 ```shell
 20:55:20.223 [     main] 생산자 시작
@@ -1482,13 +1486,7 @@ public class BoundedQueueV3 implements BoundedQueue {
 
 `notify()` 를 통해 스레드 대기 집합에 이 사실을 알려준다.
 
-
-
-
-
-
-
-
+<img width="466" alt="Screenshot 2024-11-10 at 21 47 01" src="https://github.com/user-attachments/assets/c4e2e905-94a0-48f8-8c4e-51199cdbed39">
 
 `notify()` 를 받은 스레드 대기 집합은 스레드 중에 하나를 깨운다.
 
@@ -1507,12 +1505,13 @@ public class BoundedQueueV3 implements BoundedQueue {
 대기 집합에서는 나가지만 여전히 임계 영역에 있으므로 락을 획득하기 위해 `BLOCKED` 상태로 대기한다.
 * `c1` : `WAITING` `BLOCKED`
 
+<img width="471" alt="Screenshot 2024-11-10 at 21 48 09" src="https://github.com/user-attachments/assets/2c24f5a0-f99b-4617-ba61-94f419a3996d">
 
 ```shell
 20:55:20.224 [producer1] [생산 완료] data1 -> [data1]
 ```
 
-
+<img width="473" alt="Screenshot 2024-11-10 at 21 48 56" src="https://github.com/user-attachments/assets/53d6da15-bec8-4a76-ba02-5b05ea1502db">
 
 ```shell
 20:55:20.224 [consumer1] [take] 소비자 깨어남
@@ -1524,8 +1523,7 @@ public class BoundedQueueV3 implements BoundedQueue {
 
 만약 대기 집합에 생산자 스레드가 대기하고 있다면 큐에 데이터를 넣을 수 있을 것이다.
 
-
-
+<img width="468" alt="Screenshot 2024-11-10 at 21 49 04" src="https://github.com/user-attachments/assets/35176c2f-afc8-4053-a0da-6f6d24cd4089">
 
 `c1` 이 `notify()` 로 스레드 대기 집합에 알렸지만, **생산자 스레드가 아니라 소비자 스레드만 있다.** 
 
@@ -1533,11 +1531,17 @@ public class BoundedQueueV3 implements BoundedQueue {
 
 (물론 대기 집합에 있는 어떤 스레드가 깨어날지는 알 수 없다. 여기서는 `c2` 가 깨어난다고 가정한다. 심지어 생산자와 소비자 스레드가 함께 대기 집합에 있어도 어떤 스레드가 깨어날지는 알 수 없다.)
 
+<img width="475" alt="Screenshot 2024-11-10 at 21 49 08" src="https://github.com/user-attachments/assets/8f77342c-8c40-4aca-9ee8-402ab34aeadb">
 
 ```shell
 20:55:20.224 [consumer1] [소비 완료] data1 <- []
 ```
 
+`c1` 은 작업을 완료한다.
+
+`c1` 이 `c2` 를 깨웠지만, 문제가 하나 있다. 바로 큐에 데이터가 없다는 점이다.
+
+<img width="465" alt="Screenshot 2024-11-10 at 21 49 12" src="https://github.com/user-attachments/assets/eac98680-b8fb-44ef-9065-ec7510bcf0e3">
 
 ```shell
 20:55:20.224 [consumer2] [take] 소비자 깨어남
@@ -1549,10 +1553,7 @@ public class BoundedQueueV3 implements BoundedQueue {
 
 큐에 데이터가 없기 때문에, `c2` 는 결국 `wait()` 를 호출해서 대기 상태로 변하며 다시 대기 집합에 들어간다.
 
-
-
-
-
+<img width="465" alt="Screenshot 2024-11-10 at 21 49 18" src="https://github.com/user-attachments/assets/5edd9c5e-a4c0-449f-8f16-0950d671a2c3">
 
 이처럼 소비자인 `c1` 이 같은 소비자인 `c2` 를 깨우는 것은 상당히 비효율적이다.
 
@@ -1568,12 +1569,9 @@ public class BoundedQueueV3 implements BoundedQueue {
 
 가끔씩 약간 돌아서 갈 뿐이다.
 
+<img width="459" alt="Screenshot 2024-11-10 at 21 49 22" src="https://github.com/user-attachments/assets/caba7749-98ff-4168-8807-a74878605887">
 
-
-
-
-
-
+<img width="465" alt="Screenshot 2024-11-10 at 21 49 25" src="https://github.com/user-attachments/assets/671790e8-2b74-4016-b109-17a316adee2d">
 
 ```shell
 20:55:20.325 [producer2] [생산 시도] data2 -> []
@@ -1584,23 +1582,19 @@ public class BoundedQueueV3 implements BoundedQueue {
 
 데이터가 있으므로 소비자 스레드가 깨어난다면 데이터를 소비할 수 있다.
 
-
-
-
+<img width="467" alt="Screenshot 2024-11-10 at 21 49 30" src="https://github.com/user-attachments/assets/d0747f0b-9fdd-4fca-adec-382860b6437b">
 
 스레드 대기 집합에 있는 `c3` 가 깨어난다. 참고로 어떤 스레드가 깨어날지는 알 수 없다. 
 
 `c3` 는 임계 영역 안에 있으므로 락을 획득하기 위해 대기( `BLOCKED` )한다.
 
-
-
-
+<img width="467" alt="Screenshot 2024-11-10 at 21 49 35" src="https://github.com/user-attachments/assets/4c8bf8b4-ea2b-4335-b107-b097005250cf">
 
 ```shell
 20:55:20.325 [producer2] [생산 완료] data2 -> [data2]
 ```
 
-
+<img width="471" alt="Screenshot 2024-11-10 at 21 49 39" src="https://github.com/user-attachments/assets/ae046afc-f2f8-40ae-9b34-0327f57dd0bc">
 
 ```shell
 20:55:20.325 [consumer3] [take] 소비자 깨어남
@@ -1613,20 +1607,19 @@ public class BoundedQueueV3 implements BoundedQueue {
 
 큐에 여유 공간이 생겼기 때문에 생산자 스레드가 대기 중이라면 데이터를 생산할 수 있다.
 
-
+<img width="462" alt="Screenshot 2024-11-10 at 21 49 43" src="https://github.com/user-attachments/assets/b646ea9a-cbff-4f03-84e7-e8c23d24f228">
 
 생산자 스레드를 깨울 것으로 기대하고, `notify()` 를 호출했지만 스레드 대기 집합에는 소비자인 `c2` 만 존재한다.
 
 `c2` 가 깨어나지만 임계 영역 안에 있으므로 락을 기다리는 `BLOCKED` 상태가 된다.
 
-
+<img width="473" alt="Screenshot 2024-11-10 at 21 49 47" src="https://github.com/user-attachments/assets/60e18fef-8f5a-4d8e-b9e7-5cd5d0a87052">
 
 ```shell
 20:55:20.325 [consumer3] [소비 완료] data2 <- []
 ```
 
-
-
+<img width="476" alt="Screenshot 2024-11-10 at 21 49 51" src="https://github.com/user-attachments/assets/52b3226a-8b3d-437b-b41d-694d30de8a74">
 
 ```shell
 20:55:20.325 [consumer2] [take] 소비자 깨어남
@@ -1637,9 +1630,7 @@ public class BoundedQueueV3 implements BoundedQueue {
 
 `c2` 는 다시 `wait()` 를 호출해서 대기( `WAITING` ) 상태에 들어가고, 다시 대기 집합에서 관리된다.
 
-
-
-
+<img width="469" alt="Screenshot 2024-11-10 at 21 49 56" src="https://github.com/user-attachments/assets/0bf8b326-1471-4a84-8f5c-953d9519c220">
 
 물론 `c2` 의 지금 이 사이클은 CPU 자원만 소모하고 다시 대기 집합에 들어갔기 때문에 비효율적이다.
 
@@ -1647,10 +1638,9 @@ public class BoundedQueueV3 implements BoundedQueue {
 
 하지만 `notify()` 는 이런 선택을 할 수 없다.
 
+<img width="484" alt="Screenshot 2024-11-10 at 21 49 59" src="https://github.com/user-attachments/assets/40f3451c-a794-4462-ad53-80404f487b1f">
 
-
-
-
+<img width="460" alt="Screenshot 2024-11-10 at 21 50 02" src="https://github.com/user-attachments/assets/dbdcfd9f-2d0f-47c6-9206-b44709211ecd">
 
 ```shell
 20:55:20.428 [producer3] [생산 시도] data3 -> []
@@ -1660,18 +1650,22 @@ public class BoundedQueueV3 implements BoundedQueue {
 
 스레드 대기 집합에는 소비자 `c2` 가 있으므로 생산한 데이터를 잘 소비할 수 있다.
 
+<img width="478" alt="Screenshot 2024-11-10 at 21 50 06" src="https://github.com/user-attachments/assets/ee25ca31-7fb4-45d7-b875-9f94435c2ff8">
+
+<img width="475" alt="Screenshot 2024-11-10 at 21 50 10" src="https://github.com/user-attachments/assets/621a5b96-9d98-48db-a70b-519a78b98e28">
 
 ```shell
 20:55:20.428 [producer3] [생산 완료] data3 -> [data3]
 ```
 
-
+<img width="474" alt="Screenshot 2024-11-10 at 21 50 13" src="https://github.com/user-attachments/assets/7eba7f51-1131-40ce-b270-d21aa80408dd">
 
 ```shell
 20:55:20.428 [consumer2] [take] 소비자 깨어남
 20:55:20.429 [consumer2] [take] 소비자 데이터 획득, notify() 호출
 ```
 
+<img width="456" alt="Screenshot 2024-11-10 at 21 50 17" src="https://github.com/user-attachments/assets/2de186d3-86fd-4f5b-b283-29723e8224e5">
 
 ```shell
 20:55:20.429 [consumer2] [소비 완료] data3 <- []
@@ -1679,7 +1673,7 @@ public class BoundedQueueV3 implements BoundedQueue {
 
 **생산자 스레드 실행 완료**
 
-
+<img width="467" alt="Screenshot 2024-11-10 at 21 50 24" src="https://github.com/user-attachments/assets/b62ee6f5-9e60-48b4-81c9-bc55ccec5672">
 
 ```shell
 20:55:20.533 [     main] 현재 상태 출력, 큐 데이터: []
@@ -1691,7 +1685,6 @@ public class BoundedQueueV3 implements BoundedQueue {
 20:55:20.535 [     main] producer3: TERMINATED
 20:55:20.535 [     main] == [소비자 먼저 실행] 종료, BoundedQueueV3 ==
 ```
-
 
 **정리**
 
