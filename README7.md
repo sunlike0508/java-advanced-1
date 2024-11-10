@@ -1030,16 +1030,213 @@ public class BoundedQueueV2 implements BoundedQueue {
 
 ## Object - wait, notify - 예제3 코드
 
+바는 처음부터 멀티스레드를 고려하며 탄생한 언어다.
+
+앞서 설명한 `synchronized` 를 사용한 임계 영역 안에서 락을 가지고 무한 대기하는 문제는 흥미롭게도 `Object` 클래스에 해결 방안이 있다. 
+
+`Object` 클래스는 이런 문제를 해결할 수 있는 `wait()` , `notify()` 라는 메서드를 제공한다. 
+
+`Object` 는 모든 자바 객체의 부모이기 때문에, 여기 있는 기능들은 모두 자바 언어의 기본 기능이라 생각하면 된다.
+
+**wait(), notify() 설명** 
+
+* `Object.wait()`
+  * 현재 스레드가 가진 락을 반납하고 대기( `WAITING` )한다. 
+  * 현재 스레드를 대기( `WAITING` ) 상태로 전환한다. 
+  * 이 메서드는 현재 스레드가 `synchronized` 블록이나 메서드에서 락을 소유하고 있을 때만 호출할 수 있다. 
+  * 호출한 스레드는 락을 반납하고, 다른 스레드가 해당 락을 획득할 수 있도록 한다. 
+  * 이렇게 대기 상태로 전환된 스레드는 다른 스레드가 `notify()` 또는 `notifyAll()` 을 호출할 때까지 대기 상태를 유지한다. 
+
+* `Object.notify()`
+  * 대기 중인 스레드 중 하나를 깨운다. 
+  * 이 메서드는 `synchronized` 블록이나 메서드에서 호출되어야 한다. 
+  * 깨운 스레드는 락을 다시 획득할 기회를 얻게 된다. 
+  * 만약 대기 중인 스레드가 여러 개라면, 그 중 하나만이 깨워지게 된다. 
+   
+* `Object.notifyAll()`
+  * 대기 중인 모든 스레드를 깨운다.
+  * 이 메서드 역시 `synchronized` 블록이나 메서드에서 호출되어야 하며, 모든 대기 중인 스레드가 락을 획 득할 수 있는 기회를 얻게 된다. 
+  * 이 방법은 모든 스레드를 깨워야 할 필요가 있는 경우에 유용하다.
+
+`wait()` , `notify()` 메서드를 적절히 사용하면, 멀티스레드 환경에서 발생할 수 있는 문제를 효율적으로 해결할 수 있다. 
+
+이 기능을 활용해서 스레드가 락을 가지고 임계 영역안에서 무한 대기하는 문제를 해결해보자.
+
+```java
+public class BoundedQueueV3 implements BoundedQueue {
+
+    private final Queue<String> queue = new ArrayDeque<>();
+    private final int max;
 
 
+    public BoundedQueueV3(int max) {this.max = max;}
 
 
+    @Override
+    public synchronized void put(String data) {
+        while(queue.size() == max) {
+            log("[put] 큐가 가득 참, 생산자 대기");
+            try {
+                wait();
+                log("[put] 생산자 깨어남");
+            } catch(InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        queue.offer(data);
+        log("[put] 생산자 데이터 저장, notify() 호출");
+        notify();
+    }
 
 
+    @Override
+    public synchronized String take() {
+        while(queue.isEmpty()) {
+            log("[take] 큐에 데이터가 없음, 소비자 대기");
+            try {
+                wait();
+                log("[take] 소비자 깨어남");
+            } catch(InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        String data = queue.poll();
+        log("[take] 소비자 데이터 획득, notify() 호출");
+        notify();
+        return data;
+    }
 
 
+    @Override
+    public String toString() {
+        return queue.toString();
+    }
+}
+```
 
+**put(data) - wait(), notify()**
 
+* `synchronized` 를 통해 임계 영역을 설정한다. 생산자 스레드는 락 획득을 시도한다.
+* 락을 획득한 생산자 스레드는 반복문을 사용해서 큐에 빈 공간이 생기는지 주기적으로 체크한다. 
+* 만약 빈 공간이 없다면 `Object.wait()` 을 사용해서 대기한다. 참고로 **대기할 때 락을 반납하고 대기**한다. 
+* 그리고 대기 상태에 서 깨어나면, 다시 반복문에서 큐의 빈 공간을 체크한다.
+* `wait()` 를호출해서대기하는경우 `RUNNABLE` `WAITING` 상태가된다.
+* 생산자가 데이터를 큐에 저장하고 나면 `notify()` 를 통해 저장된 데이터가 있다고 대기하는 스레드에 알려주어야 한다. 
+* 예를 들어서 큐에 데이터가 없어서 대기하는 소비자 스레드가 있다고 가정하자. 
+* 이때 `notify()` 를 호 출하면 소비자 스레드는 깨어나서 저장된 데이터를 획득할 수 있다.
+
+**take() - wait(), notify()**
+
+* `synchronized` 를 통해 임계 영역을 설정한 다. 소비자 스레드는 락 획득을 시도한다. 
+* 락을 획득한 소비자 스레드는 반복문을 사용해서 큐에 데이터가 있는지 주기적으로 체크한다. 
+* 만약 데이터가 없다 면 `Object.wait()` 을 사용해서 대기한다. 참고로 **대기할 때 락을 반납하고 대기**한다. 
+* 그리고 대기 상태에서 깨 어나면, 다시 반복문에서 큐에 데이터가 있는지 체크한다.
+* 대기하는 경우 `RUNNABLE` `WAITING` 상태가 된다.
+* 소비자가 데이터를 획득하고 나면 `notify()` 를 통해 큐에 저장할 여유 공간이 생겼다고, 대기하는 스레드에게 알려주어야 한다.
+* 예를 들어서 큐에 데이터가 가득 차서 대기하는 생산자 스레드가 있다고 가정하자.
+* 이때 `notify()` 를 호출하면 생산자 스레드는 깨어나서 데이터를 큐에 저장할 수 있다.
+* `wait()` 로 대기 상태에 빠진 스레드는 `notify()` 를 사용해야 깨울 수 있다.
+* 생산자는 생산을 완료하면 `notify()` 로 대기하는 스레드를 깨워서 생산된 데이터를 가져가게 하고, 소비자는 소비를 완료하면 `notify()` 로 대기하는 스레드를 깨워서 데이터를 생산하라고 하면 된다. 
+* 여기서 중요한 핵심은 `wait()` 를 호출해서 대기 상태에 빠질 때 락을 반납하고 대기 상태에 빠진다는 것이다.
+* 대기 상태에 빠지면 어차피 아무일도 하지 않으므로 락도 필요하지 않다.
+
+```shell
+20:53:16.747 [     main] == [생산자 먼저 실행] 시작, BoundedQueueV3 ==
+
+20:53:16.750 [     main] 생산자 시작
+20:53:16.755 [producer1] [생산 시도] data1 -> []
+20:53:16.755 [producer1] [put] 생산자 데이터 저장, notify() 호출
+20:53:16.755 [producer1] [생산 완료] data1 -> [data1]
+20:53:16.856 [producer2] [생산 시도] data2 -> [data1]
+20:53:16.856 [producer2] [put] 생산자 데이터 저장, notify() 호출
+20:53:16.856 [producer2] [생산 완료] data2 -> [data1, data2]
+20:53:16.960 [producer3] [생산 시도] data3 -> [data1, data2]
+20:53:16.960 [producer3] [put] 큐가 가득 참, 생산자 대기
+
+20:53:17.065 [     main] 현재 상태 출력, 큐 데이터: [data1, data2]
+20:53:17.065 [     main] producer1: TERMINATED
+20:53:17.065 [     main] producer2: TERMINATED
+20:53:17.066 [     main] producer3: WAITING
+
+20:53:17.066 [     main] 소비자 시작
+20:53:17.066 [consumer1] [소비 시도]     ? <- [data1, data2]
+20:53:17.066 [consumer1] [take] 소비자 데이터 획득, notify() 호출
+20:53:17.066 [consumer1] [소비 완료] data1 <- [data2]
+20:53:17.066 [producer3] [put] 생산자 깨어남
+20:53:17.067 [producer3] [put] 생산자 데이터 저장, notify() 호출
+20:53:17.067 [producer3] [생산 완료] data3 -> [data2, data3]
+20:53:17.168 [consumer2] [소비 시도]     ? <- [data2, data3]
+20:53:17.168 [consumer2] [take] 소비자 데이터 획득, notify() 호출
+20:53:17.169 [consumer2] [소비 완료] data2 <- [data3]
+20:53:17.271 [consumer3] [소비 시도]     ? <- [data3]
+20:53:17.272 [consumer3] [take] 소비자 데이터 획득, notify() 호출
+20:53:17.272 [consumer3] [소비 완료] data3 <- []
+
+20:53:17.373 [     main] 현재 상태 출력, 큐 데이터: []
+20:53:17.373 [     main] producer1: TERMINATED
+20:53:17.373 [     main] producer2: TERMINATED
+20:53:17.373 [     main] producer3: TERMINATED
+20:53:17.373 [     main] consumer1: TERMINATED
+20:53:17.374 [     main] consumer2: TERMINATED
+20:53:17.374 [     main] consumer3: TERMINATED
+20:53:17.374 [     main] == [생산자 먼저 실행] 종료, BoundedQueueV3 ==
+```
+
+```shell
+20:55:19.903 [     main] == [소비자 먼저 실행] 시작, BoundedQueueV3 ==
+
+20:55:19.905 [     main] 소비자 시작
+20:55:19.908 [consumer1] [소비 시도]     ? <- []
+20:55:19.908 [consumer1] [take] 큐에 데이터가 없음, 소비자 대기
+20:55:20.013 [consumer2] [소비 시도]     ? <- []
+20:55:20.013 [consumer2] [take] 큐에 데이터가 없음, 소비자 대기
+20:55:20.117 [consumer3] [소비 시도]     ? <- []
+20:55:20.117 [consumer3] [take] 큐에 데이터가 없음, 소비자 대기
+
+20:55:20.222 [     main] 현재 상태 출력, 큐 데이터: []
+20:55:20.223 [     main] consumer1: WAITING
+20:55:20.223 [     main] consumer2: WAITING
+20:55:20.223 [     main] consumer3: WAITING
+
+20:55:20.223 [     main] 생산자 시작
+20:55:20.224 [producer1] [생산 시도] data1 -> []
+20:55:20.224 [producer1] [put] 생산자 데이터 저장, notify() 호출
+20:55:20.224 [producer1] [생산 완료] data1 -> [data1]
+20:55:20.224 [consumer1] [take] 소비자 깨어남
+20:55:20.224 [consumer1] [take] 소비자 데이터 획득, notify() 호출
+20:55:20.224 [consumer2] [take] 소비자 깨어남
+20:55:20.224 [consumer1] [소비 완료] data1 <- []
+20:55:20.224 [consumer2] [take] 큐에 데이터가 없음, 소비자 대기
+20:55:20.325 [producer2] [생산 시도] data2 -> []
+20:55:20.325 [producer2] [put] 생산자 데이터 저장, notify() 호출
+20:55:20.325 [consumer3] [take] 소비자 깨어남
+20:55:20.325 [producer2] [생산 완료] data2 -> [data2]
+20:55:20.325 [consumer3] [take] 소비자 데이터 획득, notify() 호출
+20:55:20.325 [consumer2] [take] 소비자 깨어남
+20:55:20.325 [consumer3] [소비 완료] data2 <- []
+20:55:20.325 [consumer2] [take] 큐에 데이터가 없음, 소비자 대기
+20:55:20.428 [producer3] [생산 시도] data3 -> []
+20:55:20.428 [producer3] [put] 생산자 데이터 저장, notify() 호출
+20:55:20.428 [producer3] [생산 완료] data3 -> [data3]
+20:55:20.428 [consumer2] [take] 소비자 깨어남
+20:55:20.429 [consumer2] [take] 소비자 데이터 획득, notify() 호출
+20:55:20.429 [consumer2] [소비 완료] data3 <- []
+
+20:55:20.533 [     main] 현재 상태 출력, 큐 데이터: []
+20:55:20.533 [     main] consumer1: TERMINATED
+20:55:20.534 [     main] consumer2: TERMINATED
+20:55:20.534 [     main] consumer3: TERMINATED
+20:55:20.534 [     main] producer1: TERMINATED
+20:55:20.534 [     main] producer2: TERMINATED
+20:55:20.535 [     main] producer3: TERMINATED
+20:55:20.535 [     main] == [소비자 먼저 실행] 종료, BoundedQueueV3 ==
+```
+
+## Object - wait, notify - 예제3 분석 - 생산자 우선
+
+**생산자 스레드 실행 시작**
 
 
 
