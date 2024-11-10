@@ -1716,6 +1716,7 @@ public class BoundedQueueV3 implements BoundedQueue {
 
 ### 비효율 - 생산자 실행 예시
 
+<img width="483" alt="Screenshot 2024-11-10 at 22 55 34" src="https://github.com/user-attachments/assets/601bb56e-6d8e-41f5-88ea-b7332e82dbec">
 
 다음과 같은 상황을 가정하겠다.
 
@@ -1729,35 +1730,29 @@ public class BoundedQueueV3 implements BoundedQueue {
 
 `p0` 스레드가 `data0` 생산을 시도한다.
 
-
-
+<img width="450" alt="Screenshot 2024-11-10 at 22 55 54" src="https://github.com/user-attachments/assets/da1fce36-2302-4dfa-8ce6-12765031731d">
 
 `p0` 스레드가 실행되면서 `data0` 를 큐에 저장한다. 이때 큐에 데이터가 가득 찬다. 
 
 `notify()` 를 통해 대기 집합의 스레드를 하나 깨운다.
 
-
-
+<img width="474" alt="Screenshot 2024-11-10 at 22 56 43" src="https://github.com/user-attachments/assets/f69b8de3-adac-47a6-b829-8a1241d7c148">
 
 만약 `notify()` 의 결과로 소비자 스레드가 깨어나게 되면 소비자 스레드는 큐의 데이터를 획득하고, 완료된다.
 
-
-
-
+<img width="477" alt="Screenshot 2024-11-10 at 22 56 56" src="https://github.com/user-attachments/assets/fa84d198-f553-4af9-9229-42f87d660dc5">
 
 만약 `notify()` 의 결과로 생산자 스레드를 깨우게 되면, 이미 큐에 데이터는 가득 차 있다. 
 
 따라서 데이터를 생 산하지 못하고 다시 대기 집합으로 이동하는 비효율이 발생한다.
 
-
-
-
 ### 비효율 - 소비자 실행 예시
 
+<img width="470" alt="Screenshot 2024-11-10 at 22 57 36" src="https://github.com/user-attachments/assets/877a14ba-1ec4-4b99-8fab-c00740898143">
 
 이번에는 반대의 경우로 소비자 `c0` 를 실행해보자.
 
-
+<img width="463" alt="Screenshot 2024-11-10 at 22 57 44" src="https://github.com/user-attachments/assets/73acf7a7-3a9d-4413-ae4c-48c230f09594">
 
 `c0` 스레드가 실행되고 `data0` 를 획득한다. 
 
@@ -1765,15 +1760,13 @@ public class BoundedQueueV3 implements BoundedQueue {
 
 `c0` 스레드는 `notify()` 를 호출한다.
 
-
-
+<img width="485" alt="Screenshot 2024-11-10 at 22 57 58" src="https://github.com/user-attachments/assets/3c4303a1-a0f6-450e-a91b-f930e6a9caab">
 
 스레드 대기 집합에서 소비자 스레드가 깨어나면 큐에 데이터가 없기 때문에 다시 대기 집합으로 이동하는 비효율 이 발생한다.
 
-
+<img width="470" alt="Screenshot 2024-11-10 at 22 58 09" src="https://github.com/user-attachments/assets/0cff206d-c2e1-4a43-ab95-f3f21eb47964">
 
 스레드 대기 집합에서 생산자 스레드가 깨어나면 큐에 데이터를 저장하고 완료된다.
-
 
 **같은 종류의 스레드를 깨울 때 비효율이 발생한다.**
 
@@ -1786,7 +1779,7 @@ public class BoundedQueueV3 implements BoundedQueue {
 `notify()` 의 또 다른 문제점으로는 어떤 스레드가 깨어날 지 알 수 없기 때문에 발생할 수 있는 스레드 기아 문제가
 있다.
 
-
+<img width="475" alt="Screenshot 2024-11-10 at 22 58 37" src="https://github.com/user-attachments/assets/76453e1c-d5c9-4a18-bc15-c9e57a8a1d72">
 
 `notify()` 가 어떤 스레드를 깨울지는 알 수 없다. 
 
@@ -1808,11 +1801,11 @@ public class BoundedQueueV3 implements BoundedQueue {
 
 `notifyAll()` 을 사용하면 스레드 대기 집합에 있는 모든 스레드를 한번에 다 깨울 수 있다.
 
+<img width="491" alt="Screenshot 2024-11-10 at 22 59 25" src="https://github.com/user-attachments/assets/bc8d5859-b19c-4632-abe7-f24e19c04316">
 
 데이터를 획득한 `c0` 스레드가 `notifyAll()` 을 호출한다.
 
-
-
+<img width="473" alt="Screenshot 2024-11-10 at 22 59 34" src="https://github.com/user-attachments/assets/28199705-d6be-4cea-b8fa-a133d492fa0c">
 
 대기 집합에 있는 모든 스레드가 깨어난다.
 
@@ -1824,20 +1817,17 @@ public class BoundedQueueV3 implements BoundedQueue {
 
 `c2` ~ `c5` 모두 마찬가지이다.
 
-
-
+<img width="462" alt="Screenshot 2024-11-10 at 22 59 48" src="https://github.com/user-attachments/assets/53309813-c243-45e5-a9a1-56761c191627">
 
 따라서 `p1` 이 가장 늦게 락 획득을 시도해도, `c1` ~ `c5` 는 모두 스레드 대기 집합에 들어갔으므로 결과적으로 `p1` 만 남게 되고, 결국 락을 획득하게 된다.
 
+<img width="461" alt="Screenshot 2024-11-10 at 23 00 01" src="https://github.com/user-attachments/assets/5c668d60-1c83-403f-8eda-f8d56189ad1d">
 
 `p1` 은 락을 획득하고, 데이터를 생성한 다음에 `notifyAll()` 을 호출하고 실행을 완료할 수 있다. 
 
 참고로 반대의 경우도 같은 스레드 기아 문제가 발생할 수 있기 때문에 `notifyAll()` 을 호출한다.
 
 결과적으로 **notifyAll()** 을 사용해서 스레드 기아 문제는 막을 수 있지만, 비효율을 막지는 못한다.
-
-
-
 
 ### 정리
 
