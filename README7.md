@@ -1028,7 +1028,7 @@ public class BoundedQueueV2 implements BoundedQueue {
 
 자바의 `Object.wait()` , `Object.noitfy()` 를 사용하면 락을 가지고 대기하는 스레드가 대기하는 동안 다른 스레드에게 락을 양보할 수 있다.
 
-
+## Object - wait, notify - 예제3 코드
 
 
 
