@@ -1640,6 +1640,7 @@ public class BoundedQueueV3 implements BoundedQueue {
 
 <img width="484" alt="Screenshot 2024-11-10 at 21 49 59" src="https://github.com/user-attachments/assets/40f3451c-a794-4462-ad53-80404f487b1f">
 
+
 <img width="460" alt="Screenshot 2024-11-10 at 21 50 02" src="https://github.com/user-attachments/assets/dbdcfd9f-2d0f-47c6-9206-b44709211ecd">
 
 ```shell
@@ -1651,6 +1652,7 @@ public class BoundedQueueV3 implements BoundedQueue {
 스레드 대기 집합에는 소비자 `c2` 가 있으므로 생산한 데이터를 잘 소비할 수 있다.
 
 <img width="478" alt="Screenshot 2024-11-10 at 21 50 06" src="https://github.com/user-attachments/assets/ee25ca31-7fb4-45d7-b875-9f94435c2ff8">
+
 
 <img width="475" alt="Screenshot 2024-11-10 at 21 50 10" src="https://github.com/user-attachments/assets/621a5b96-9d98-48db-a70b-519a78b98e28">
 
