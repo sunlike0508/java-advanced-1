@@ -22,3 +22,5 @@
 자바는 1.0부터 존재한 `synchronized` 와 `BLOCKED` 상태를 통한 임계 영역 관리의 단점을 해결하기 위해 자바 1.5부터 `Lock` 인터페이스와 `ReentrantLock` 구현체를 제공한다.
 
 우선 대기 집합을 분리해서 문제를 해결하기 전에, 앞서 `synchronized` , `Object.wait()` , `Object.notify()` 를 통해 작성한 코드를 `Lock` 인터페이스와 ReentrantLock` 구현체를 사용해서 그대로 다시 구현해보자.
+
+##
